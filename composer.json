@@ -1,0 +1,17 @@
+{
+    "name": "routee/waymoreroutee",
+    "description": "",
+    "type": "magento2-module",
+    "version": "2.0.0",
+    "license": [
+        "Proprietary"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Routee\\WaymoreRoutee\\": ""
+        }
+    }
+}

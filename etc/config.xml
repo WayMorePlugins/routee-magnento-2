@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Core/etc/config.xsd">
+    <default>
+        <waymoreroutee>
+            <general>
+                <enable_in_frontend>1</enable_in_frontend>
+                <testmode>0</testmode>
+            </general>
+        </waymoreroutee>
+    </default>
+</config>

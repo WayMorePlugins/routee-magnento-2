@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    
+    <!-- Mass API Calls Start -->
+	<event name="admin_system_config_changed_section_waymoreroutee">
+        <observer name="waymoreroutee_admin_system_config_changed_section_general" instance="Routee\WaymoreRoutee\Observer\ConfigObserver"/>
+    </event>
+	<event name="waymoreroutee_uuid_generation_complete">
+        <observer name="waymoreroutee_massapicustomers_call" instance="Routee\WaymoreRoutee\Observer\Massapicustomers" />
+    </event>
+	<event name="waymoreroutee_massapicustomer_complete">
+        <observer name="waymoreroutee_massapisubscribers_call" instance="Routee\WaymoreRoutee\Observer\Massapisubscribers" />
+    </event>
+	<event name="waymoreroutee_massapisubscriber_complete">
+        <observer name="waymoreroutee_massapiproducts_call" instance="Routee\WaymoreRoutee\Observer\Massapiproducts" />
+    </event>
+	<event name="waymoreroutee_massapiproduct_complete">
+        <observer name="waymoreroutee_massapiwishlists_call" instance="Routee\WaymoreRoutee\Observer\Massapiwishlists" />
+    </event>
+	<event name="waymoreroutee_massapiwishlist_complete">
+        <observer name="waymoreroutee_massapiorders_call" instance="Routee\WaymoreRoutee\Observer\Massapiorders" />
+    </event>
+	<!-- Mass API Calls End -->
+	
+	<!-- Events API Calls Start -->
+	<event name="customer_register_success">
+		<observer name="waymoreroutee_eventsapicustomeradd_call" instance="Routee\WaymoreRoutee\Observer\Eventcustomeradd" />
+	</event>
+	<event name="customer_account_edited">
+		<observer name="waymoreroutee_eventsapicustomerupdate_call" instance="Routee\WaymoreRoutee\Observer\Eventcustomerupdate" />
+	</event>
+	<event name="sales_order_place_after">
+		<observer name="waymoreroutee_eventsapineworder_call" instance="Routee\WaymoreRoutee\Observer\Eventneworder" />
+	</event>
+	<event name="sales_order_save_after">
+		<observer name="waymoreroutee_eventsapiorderstatuschange_call" instance="Routee\WaymoreRoutee\Observer\Eventorderstatuschange" />
+	</event>
+	<event name="sales_order_invoice_pay">
+		<observer name="waymoreroutee_eventsapipaymentconfirm_call" instance="Routee\WaymoreRoutee\Observer\Eventpaymentconfirm" />
+	</event>
+	<event name="checkout_cart_save_after">
+		<observer name="waymoreroutee_eventsapicartupdate_call" instance="Routee\WaymoreRoutee\Observer\Eventcartupdate" />
+	</event>
+	<event name="controller_action_catalog_product_save_entity_after">
+		<observer name="waymoreroutee_eventsapinewproduct_call" instance="Routee\WaymoreRoutee\Observer\Eventnewproduct" />
+	</event>
+	<event name="catalog_product_save_after">
+		<observer name="waymoreroutee_eventsapiproductoutofstock_call" instance="Routee\WaymoreRoutee\Observer\Eventproductoutofstock" />
+	</event>
+	<event name="wishlist_product_add_after">
+		<observer name="waymoreroutee_eventsapiwishlistadd_call" instance="Routee\WaymoreRoutee\Observer\Eventwishlistadd" />
+	</event>
+	<event name="controller_action_predispatch_wishlist_index_remove">
+		<observer name="waymoreroutee_eventsapiwishlistremove_call" instance="Routee\WaymoreRoutee\Observer\Eventwishlistremove" />
+	</event>
+    
+    <!-- below event name controller_action_postdispatch_newsletter_manage_save was not working to changed to the existing one on 15th Jan 2020-->
+	<event name="newsletter_subscriber_save_after">
+		<observer name="waymoreroutee_eventsapinewsletter_call" instance="Routee\WaymoreRoutee\Observer\Eventnewsletter" />
+	</event>
+	<event name="controller_action_postdispatch_catalogsearch_result_index">
+		<observer name="waymoreroutee_eventsapicatalogsearch_call" instance="Routee\WaymoreRoutee\Observer\Eventcatalogsearch" />
+	</event>
+    <event name="sales_order_save_commit_after">
+        <observer name="waymoreroutee_eventsapiorderstockupdate_call" instance="Routee\WaymoreRoutee\Observer\Eventsstockorderupdate" />
+    </event>
+	<!-- Events API Calls End -->
+</config>
