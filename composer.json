@@ -13,5 +13,7 @@
         "psr-4": {
             "Routee\\WaymoreRoutee\\": ""
         }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
