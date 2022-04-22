@@ -4,7 +4,8 @@
     "type": "magento2-module",
     "version": "2.0.0",
     "license": [
-        "Proprietary"
+        "OSL-3.0",
+        "AFL-3.0"
     ],
     "autoload": {
         "files": [
