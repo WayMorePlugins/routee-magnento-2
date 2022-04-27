@@ -63,13 +63,13 @@ class Data extends AbstractHelper
         $apiUrl = '';
         switch ($urlFor) {
             case "auth":
-                $apiUrl = 'https://dev.waymore.io/api/authenticate';
+                $apiUrl = 'https://waymore.routee.net/api/authenticate';
                 break;
             case "massData":
-                $apiUrl = 'https://dev-idata.routee.net/api/data';
+                $apiUrl = 'https://idata.routee.net/api/data';
                 break;
             case "events":
-                $apiUrl = 'https://dev-idata.routee.net/api/event';
+                $apiUrl = 'https://idata.routee.net/api/event';
                 break;
         }
         
