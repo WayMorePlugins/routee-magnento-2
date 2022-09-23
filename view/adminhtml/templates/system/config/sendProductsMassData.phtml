@@ -1,0 +1,41 @@
+<div class="pp-buttons-container">
+    <p>
+        <button data-action="product_data" class="send_mass_data" id="product_mass_data" type="button">
+            <?= $block->escapeHtml(__('Start Syncing')) ?>
+        </button>
+    </p>
+</div>
+
+<script type="text/javascript">
+    const url = "<?php echo $block->getAjaxUrl(); ?>";
+    requirejs(['jquery'], function($) {
+        let dtransferred = "<?php echo $block->completeDataSynced(); ?>";
+        let getuuid = "<?php echo $block->getUUID(); ?>";
+        if (!getuuid) {
+            document.getElementsByClassName("send_mass_data").setAttribute("disabled", "true");
+        }
+
+        if (getuuid) {
+            $('#waymoreroutee_general_username').attr('readonly', 'readonly');
+            $('#waymoreroutee_general_password').attr('readonly', 'readonly');
+        }
+
+        if (dtransferred) {
+            $('#waymoreroutee_general-head').before('<div class="message message-success success"><div data-ui-id="messages-message-success">You have been synchronized with waymore.routee.net.</div></div>');
+        }
+    });
+</script>
+
+
+<?php if ($block->dataSynced()): ?>
+        <script type="text/javascript">
+                document.getElementById("product_mass_data").setAttribute("disabled", "true");
+        </script>
+<?php else: ?>
+        <style>
+            #row_waymoreroutee_exportdata_mass_import_product .note span{
+                display: none;
+            }
+        </style>
+<?php endif; ?>
+

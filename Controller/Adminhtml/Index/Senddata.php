@@ -25,12 +25,12 @@ class Senddata extends Action
     /**
      * @var Massapiproducts
      */
-    protected $_massApiproObserver;
+    protected $_massApiProObserver;
 
     /**
      * @var Massapiorders
      */
-    protected $_massApiordObserver;
+    protected $_massApiOrdObserver;
 
     /**
      * @var Massapiwishlists
@@ -66,7 +66,7 @@ class Senddata extends Action
      * @param Context $context
      * @param WriterInterface $configWriter
      * @param Massapicustomers $massApiCustObserver
-     * @param Massapiproducts $massApiproObserver
+     * @param Massapiproducts $massApiProObserver
      * @param Massapiorders $massApiordObserver
      * @param Massapiwishlists $massApiWishObserver
      * @param Massapisubscribers $massApiSubObserver
@@ -78,7 +78,7 @@ class Senddata extends Action
         Context $context,
         WriterInterface $configWriter,
         Massapicustomers $massApiCustObserver,
-        Massapiproducts $massApiproObserver,
+        Massapiproducts $massApiProObserver,
         Massapiorders $massApiordObserver,
         Massapiwishlists $massApiWishObserver,
         Massapisubscribers $massApiSubObserver,
@@ -87,8 +87,8 @@ class Senddata extends Action
         Pool $cacheFrontendPool
     ) {
         $this->_massApiCustObserver = $massApiCustObserver;
-        $this->_massApiproObserver = $massApiproObserver;
-        $this->_massApiordObserver = $massApiordObserver;
+        $this->_massApiProObserver = $massApiProObserver;
+        $this->_massApiOrdObserver = $massApiordObserver;
         $this->_massApiWishObserver = $massApiWishObserver;
         $this->_massApiSubObserver = $massApiSubObserver;
         $this->_saveConfig = $configWriter;
@@ -117,20 +117,82 @@ class Senddata extends Action
     {
         if ($this->getRequest()->isAjax()) {
             $GET = $this->getRequest()->getParams();
-            $this->_massApiCustObserver->getCustomerData($GET);
-            $this->_massApiSubObserver->getSubscriberData($GET);
-            $this->_massApiproObserver->getProductData($GET);
-            $this->_massApiWishObserver->getWishlistData($GET);
-            $orderData = $this->_massApiordObserver->getOrderData($GET);
-            if ($orderData == 'OrderDone') {
-                $this->_saveConfig->save('waymoreroutee/general/datatransferred', $GET['uuid'], 'default', 0);
+            $result = [];
+            switch ($GET['action']) {
+                case 'product_data':
+                    $result = $this->handleProductExport($GET);
+                    break;
+
+                case 'customer_data':
+                    $result = $this->handleCustomerExport($GET);
+                    break;
+
+                case 'order_data':
+                    $result = $this->handleOrderExport($GET);
+                    break;
+
+                case 'subscriber_data':
+                    $result = $this->handleSubscriberExport($GET);
+                    break;
+
+                case 'wishlist_data':
+                    $result = $this->handleWishlistExport($GET);
+                    break;
+            }
+
+            if ($result) {
                 $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-                $response->setData(["msg" => "IntegrationDone"]);
+                $response->setData($result);
                 $this->clearMagentoCache();
                 return $response;
             }
         }
         return '';
+    }
+
+    private function handleProductExport($GET)
+    {
+        $result = $this->_massApiProObserver->getProductData($GET);
+        if (isset($result['reload']) && $result['reload'] == 1) {
+            $this->_saveConfig->save('waymoreroutee/general/productmass', 1, 'default', 0);
+        }
+        return $result;
+    }
+
+    private function handleCustomerExport($GET)
+    {
+        $result = $this->_massApiCustObserver->getCustomerData($GET);
+        if (isset($result['reload']) && $result['reload'] == 1) {
+            $this->_saveConfig->save('waymoreroutee/general/customermass', 1, 'default', 0);
+        }
+        return $result;
+    }
+
+    private function handleOrderExport($GET)
+    {
+        $result = $this->_massApiOrdObserver->getOrderData($GET);
+        if (isset($result['reload']) && $result['reload'] == 1) {
+            $this->_saveConfig->save('waymoreroutee/general/ordermass', 1, 'default', 0);
+        }
+        return $result;
+    }
+
+    private function handleSubscriberExport($GET)
+    {
+        $result = $this->_massApiSubObserver->getSubscriberData($GET);
+        if (isset($result['reload']) && $result['reload'] == 1) {
+            $this->_saveConfig->save('waymoreroutee/general/subscribermass', 1, 'default', 0);
+        }
+        return $result;
+    }
+
+    private function handleWishlistExport($GET)
+    {
+        $result = $this->_massApiWishObserver->getWishlistData($GET);
+        if (isset($result['reload']) && $result['reload'] == 1) {
+            $this->_saveConfig->save('waymoreroutee/general/wishlistmass', 1, 'default', 0);
+        }
+        return $result;
     }
 
     /**

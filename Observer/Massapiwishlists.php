@@ -8,6 +8,9 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\Event\Manager;
 use Magento\Store\Model\ScopeInterface;
 
+/**
+ * Mass data export class for wishlist data
+ */
 class Massapiwishlists implements ObserverInterface
 {
     /**
@@ -26,6 +29,11 @@ class Massapiwishlists implements ObserverInterface
     protected $_wishlistCollectionFactory;
 
     /**
+     * @var int
+     */
+    private $limit;
+
+    /**
      * @param Data $helper
      * @param Manager $eventManager
      * @param CollectionFactory $wishlistCollectionFactory
@@ -38,6 +46,7 @@ class Massapiwishlists implements ObserverInterface
         $this->helper           = $helper;
         $this->_eventManager    = $eventManager;
         $this->_wishlistCollectionFactory = $wishlistCollectionFactory;
+        $this->limit = $this->helper->getRPRLimit();
     }
 
     /**
@@ -62,13 +71,14 @@ class Massapiwishlists implements ObserverInterface
      * Get Wishlist data
      *
      * @param object $requestData
-     * @return void
+     * @return array|int[]|string
      */
     public function getWishlistData($requestData)
     {
         $uuid = $requestData['uuid'];
         $storeId = $requestData['store_id'];
-        return $this->massApiWishlistAction($uuid, 'sendMass', $storeId, 0, 0);
+        $page = $requestData['cycle_count'];
+        return $this->massApiWishlistAction($uuid, 'sendMass', $storeId, 0, 0, $page);
     }
 
     /**
@@ -80,7 +90,7 @@ class Massapiwishlists implements ObserverInterface
      * @param int $scope
      * @return mixed
      */
-    public function getWishlistCollection($callFrom, $storeId, $scopeId, $scope)
+    public function getWishlistCollection($callFrom, $storeId, $scopeId, $scope, $page)
     {
         $wishlistCollection = $this->_wishlistCollectionFactory->create();
         if ($scope == ScopeInterface::SCOPE_STORES) {
@@ -89,6 +99,9 @@ class Massapiwishlists implements ObserverInterface
 
         if ($callFrom == 'sendMass') {
             $wishlistCollection->addStoreFilter($storeId);
+            if (!empty($wishlistCollection->getData()) && $page > 0) {
+                $wishlistCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
+            }
         }
 
         return $wishlistCollection;
@@ -121,16 +134,15 @@ class Massapiwishlists implements ObserverInterface
      * @param int $storeId
      * @param int $scopeId
      * @param int $scope
-     * @return string|void
+     * @return string|array
      */
-    public function massApiWishlistAction($uuid, $callFrom, $storeId, $scopeId, $scope)
+    public function massApiWishlistAction($uuid, $callFrom, $storeId, $scopeId, $scope, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $wishlistCollection = $this->getWishlistCollection($callFrom, $storeId, $scopeId, $scope);
+        $wishlistCollection = $this->getWishlistCollection($callFrom, $storeId, $scopeId, $scope, $page);
         
         if (!empty($wishlistCollection) && count($wishlistCollection)>0) {
-            $w = $i = 0;
-            $total_wishlists = count($wishlistCollection);
+            $i = 0;
             $mass_data = $this->getMassData($uuid);
             foreach ($wishlistCollection as $wishlist) {
                 $mass_data['data'][0]['object'][$i] = [
@@ -138,25 +150,17 @@ class Massapiwishlists implements ObserverInterface
                     'product_id'  => $wishlist->getProductId()
                 ];
                 $i++;
-                $w++;
-                if ($i == 100 || $w == $total_wishlists) {
-                    $responseArr = $this->helper->curl($apiUrl, $mass_data);
-                    //response will contain the output in form of JSON string
-
-                    $i = 0;
-                    $mass_data['data'][0]['object'] = [];
-                    if ($w == $total_wishlists) {
-                        if (!empty($responseArr['message']) && $callFrom == 'eventMass') {
-                            $dispatchArr = ['uuid' => $uuid, 'scopeId' => $scopeId, 'scope' => $scope];
-                            $this->_eventManager->dispatch('waymoreroutee_massapiwishlist_complete', $dispatchArr);
-                        } else {
-                            return "WishlistDone";
-                        }
-                    }
+            }
+            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+            $result = ['reload' => 0];
+            if (!empty($responseArr['message'])) {
+                if ($i < $this->limit) {
+                    $result = ['reload' => 1];
                 }
             }
         } else {
-            return "WishlistDone";
+            $result = ['reload' => 1];
         }
+        return $result;
     }
 }

@@ -8,6 +8,9 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 use Magento\Store\Model\ScopeInterface;
 
+/**
+ * Mass data export class for orders data
+ */
 class Massapiorders implements ObserverInterface
 {
     /**
@@ -26,6 +29,11 @@ class Massapiorders implements ObserverInterface
     protected $_orderCollectionFactory;
 
     /**
+     * @var int
+     */
+    private $limit;
+
+    /**
      * @param WriterInterface $configWriter
      * @param Data $helper
      * @param CollectionFactory $orderCollectionFactory
@@ -38,6 +46,7 @@ class Massapiorders implements ObserverInterface
         $this->configWriter             = $configWriter;
         $this->helper                   = $helper;
         $this->_orderCollectionFactory  = $orderCollectionFactory;
+        $this->limit = $this->helper->getRPRLimit();
     }
 
     /**
@@ -67,13 +76,16 @@ class Massapiorders implements ObserverInterface
      * @param int $storeId
      * @return \Magento\Sales\Model\ResourceModel\Order\Collection
      */
-    public function getorderCollection($callFrom, $scope, $scopeId, $storeId)
+    public function getorderCollection($callFrom, $scope, $scopeId, $storeId, $page)
     {
         $orderCollection = $this->_orderCollectionFactory->create()->addAttributeToSelect('*');
         if ($scope == ScopeInterface::SCOPE_STORES && $callFrom == 'eventMass') {
             $orderCollection = $orderCollection->addStoreFilter($scopeId);
         } else {
             $orderCollection = $orderCollection->addAttributeToFilter("store_id", ["eq" => $storeId]);
+            if (!empty($orderCollection->getData()) && $page > 0) {
+                $orderCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
+            }
         }
         return $orderCollection;
     }
@@ -129,7 +141,10 @@ class Massapiorders implements ObserverInterface
      */
     public function getOrderData($requestData)
     {
-        return $this->massApiOrderAction('eventRequest', $requestData['uuid'], 0, 0, $requestData['store_id']);
+        $uuid = $requestData['uuid'];
+        $storeId = $requestData['store_id'];
+        $page = $requestData['cycle_count'];
+        return $this->massApiOrderAction('eventRequest', $uuid, 0, 0, $storeId, $page);
     }
 
     /**
@@ -140,17 +155,15 @@ class Massapiorders implements ObserverInterface
      * @param int $scopeId
      * @param object $scope
      * @param int $storeId
-     * @return string|void
+     * @return string|array
      */
-    public function massApiOrderAction($callFrom, $uuid, $scopeId, $scope, $storeId)
+    public function massApiOrderAction($callFrom, $uuid, $scopeId, $scope, $storeId, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $orderCollection = $this->getorderCollection($callFrom, $scope, $scopeId, $storeId);
+        $orderCollection = $this->getorderCollection($callFrom, $scope, $scopeId, $storeId, $page);
 
         if (!empty($orderCollection) && count($orderCollection) > 0) {
-            $o = $i = 0;
-
-            $total_orders = count($orderCollection);
+            $i = 0;
             $mass_data = $this->getMassData($uuid);
 
             foreach ($orderCollection as $order) {
@@ -162,28 +175,18 @@ class Massapiorders implements ObserverInterface
                         'quantity' => $item->getQtyOrdered(),
                     ];
                 }
-
                 $i++;
-                $o++;
-
-                if ($i == 100 || $o == $total_orders) {
-                    $responseArr = $this->helper->curl($apiUrl, $mass_data);
-                    //response will contain the output in form of JSON string
-
-                    $i = 0;
-                    $mass_data['data'][0]['object'] = [];
-
-                    if ($o == $total_orders) {
-                        if (!empty($responseArr['message']) && $callFrom == 'eventMass') {
-                            $this->configWriter->save('waymoreroutee/general/datatransferred', $uuid, 'default', 0);
-                        } else {
-                            return "OrderDone";
-                        }
-                    }
+            }
+            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+            $result = ['reload' => 0];
+            if (!empty($responseArr['message'])) {
+                if ($i < $this->limit) {
+                    $result = ['reload' => 1];
                 }
             }
         } else {
-            return "OrderDone";
+            $result = ['reload' => 1];
         }
+        return $result;
     }
 }

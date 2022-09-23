@@ -1,6 +1,7 @@
 <?php
 namespace Routee\WaymoreRoutee\Observer;
 
+use Magento\Customer\Model\ResourceModel\Customer\Collection;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Store\Model\ScopeInterface;
@@ -9,6 +10,9 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Event\Manager;
 use Magento\Customer\Model\ResourceModel\Customer\CollectionFactory;
 
+/**
+ * Mass data export class for customers data
+ */
 class Massapicustomers implements ObserverInterface
 {
     /**
@@ -32,6 +36,11 @@ class Massapicustomers implements ObserverInterface
     protected $_customerFactory;
 
     /**
+     * @var int
+     */
+    private $limit;
+
+    /**
      * @param Data $helper
      * @param StoreManagerInterface $storeManager
      * @param Manager $eventManager
@@ -47,6 +56,7 @@ class Massapicustomers implements ObserverInterface
         $this->_storeManager    = $storeManager;
         $this->_eventManager    = $eventManager;
         $this->_customerFactory = $customerFactory;
+        $this->limit = $this->helper->getRPRLimit();
     }
 
     /**
@@ -91,15 +101,18 @@ class Massapicustomers implements ObserverInterface
      * Get Customer Collection
      *
      * @param int $websiteId
-     * @return \Magento\Customer\Model\ResourceModel\Customer\Collection
+     * @return Collection
      */
-    public function getCustomerCollection($websiteId)
+    public function getCustomerCollection($websiteId, $page)
     {
         $customerCollection = $this->_customerFactory->create();
         if ($websiteId > 0) {
             $customerCollection = $customerCollection
                 ->addAttributeToSelect("*")
                 ->addAttributeToFilter("website_id", ["eq" => $websiteId]);
+            if (!empty($customerCollection->getData()) && $page > 0) {
+                $customerCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
+            }
         }
         return $customerCollection;
     }
@@ -185,7 +198,9 @@ class Massapicustomers implements ObserverInterface
     public function getCustomerData($requestData)
     {
         $websiteId = $this->_storeManager->getWebsite()->getId();
-        return $this->massApiCutomerAction('sendMass', $requestData['uuid'], $websiteId, 0, 0);
+        $uuid = $requestData['uuid'];
+        $page = $requestData['cycle_count'];
+        return $this->massApiCutomerAction('sendMass', $uuid, $websiteId, 0, 0, $page);
     }
 
     /**
@@ -196,16 +211,15 @@ class Massapicustomers implements ObserverInterface
      * @param int $websiteId
      * @param int $scopeId
      * @param object $scope
-     * @return string|void
+     * @return string|array
      */
-    public function massApiCutomerAction($callFrom, $uuid, $websiteId, $scopeId, $scope)
+    public function massApiCutomerAction($callFrom, $uuid, $websiteId, $scopeId, $scope, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $customerCollection = $this->getCustomerCollection($websiteId);
+        $customerCollection = $this->getCustomerCollection($websiteId, $page);
 
         if (!empty($customerCollection) && count($customerCollection) > 0) {
-            $c = $i = 0;
-            $total_users = count($customerCollection);
+            $i = 0;
             $mass_data   = $this->getMassData($uuid);
 
             foreach ($customerCollection as $customer) {
@@ -213,27 +227,17 @@ class Massapicustomers implements ObserverInterface
                 $mass_data['data'][0]['object'][$i] = $customerInfo;
 
                 $i++;
-                $c++;
-
-                if ($i == 100 || $c == $total_users) {
-                    $responseArr = $this->helper->curl($apiUrl, $mass_data);
-                    //response will contain the output in form of JSON string
-
-                    $i = 0;
-                    $mass_data['data'][0]['object'] = [];
-
-                    if ($c == $total_users) {
-                        if (!empty($responseArr['message']) && $callFrom == 'eventMass') {
-                            $dispatchArr = ['uuid' => $uuid, 'scopeId' => $scopeId, 'scope' => $scope];
-                            $this->_eventManager->dispatch('waymoreroutee_massapicustomer_complete', $dispatchArr);
-                        } else {
-                            return "CustomerDone";
-                        }
-                    }
+            }
+            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+            $result = ['reload' => 0];
+            if (!empty($responseArr['message'])) {
+                if ($i < $this->limit) {
+                    $result = ['reload' => 1];
                 }
             }
         } else {
-            return "CustomerDone";
+            $result = ['reload' => 1];
         }
+        return $result;
     }
 }

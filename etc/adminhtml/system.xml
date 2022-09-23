@@ -2,15 +2,14 @@
 
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Backend/etc/system_file.xsd">
     <system>
-        <tab id="waymoreroutee" translate="label" sortOrder="100">
+        <tab id="waymoreroutee" translate="label" sortOrder="1">
             <label>Waymore Routee Settings</label>
         </tab>
         <section id="waymoreroutee" translate="label" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Settings</label>
             <tab>waymoreroutee</tab>
-            <resource>Routee_WaymoreRoutee::system_config</resource>
-            <group id="general" translate="label" type="text" sortOrder="1" showInDefault="1"
-                showInWebsite="1" showInStore="1">
+            <resource>Routee_WaymoreRoutee::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>
                 <field id="enable" translate="label" type="select" sortOrder="1"
                     showInDefault="1" showInWebsite="1" showInStore="1">
@@ -29,20 +28,43 @@
                     <comment>Password of waymore.routee.net</comment>
                     <validate>required-entry</validate>
                 </field>
-                <field id="testmode" translate="label" type="select" sortOrder="9"
-                    showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Test Mode</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="mass_import" translate="label comment tooltip" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Start Sync</label>
-                    <comment>Synchronize with waymore.routee.net</comment>
-                    <frontend_model>Routee\WaymoreRoutee\Block\System\Config\Sendmassdata</frontend_model>
-                </field>
-                <field id="datatransferred" translate="label comment tooltip" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Data Transferred</label>
-                </field>
             </group>
+
+            <group id="exportdata" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Export Mass Data</label>
+
+                <field id="mass_import_product" translate="label comment tooltip" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Products Synchronization</label>
+                    <comment>Synchronization completed</comment>
+                    <frontend_model>Routee\WaymoreRoutee\Block\System\Config\SendProductMassData</frontend_model>
+                </field>
+
+                <field id="mass_import_customer" translate="label comment tooltip" type="button" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Customers Synchronization</label>
+                    <comment>Synchronization completed</comment>
+                    <frontend_model>Routee\WaymoreRoutee\Block\System\Config\SendCustomerMassData</frontend_model>
+                </field>
+
+                <field id="mass_import_order" translate="label comment tooltip" type="button" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Orders Synchronization</label>
+                    <comment>Synchronization completed</comment>
+                    <frontend_model>Routee\WaymoreRoutee\Block\System\Config\SendOrderMassData</frontend_model>
+                </field>
+
+                <field id="mass_import_nl" translate="label comment tooltip" type="button" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Subscribers Synchronization</label>
+                    <comment>Synchronization completed</comment>
+                    <frontend_model>Routee\WaymoreRoutee\Block\System\Config\SendNlMassData</frontend_model>
+                </field>
+
+                <field id="mass_import_wishlist" translate="label comment tooltip" type="button" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Wishlist Synchronization</label>
+                    <comment>Synchronization completed</comment>
+                    <frontend_model>Routee\WaymoreRoutee\Block\System\Config\SendWishlistMassData</frontend_model>
+                </field>
+
+            </group>
+
         </section>
     </system>
 </config>

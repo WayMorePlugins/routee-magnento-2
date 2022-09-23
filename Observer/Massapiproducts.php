@@ -2,8 +2,11 @@
 namespace Routee\WaymoreRoutee\Observer;
 
 use Magento\Catalog\Api\CategoryRepositoryInterface;
+use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Store\Model\StoreManagerInterface;
@@ -13,6 +16,9 @@ use Magento\CatalogInventory\Model\Stock\StockItemRepository;
 use Magento\Framework\UrlInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 
+/**
+ * Mass Products export class
+ */
 class Massapiproducts implements ObserverInterface
 {
     /**
@@ -51,6 +57,11 @@ class Massapiproducts implements ObserverInterface
     protected $StockItemRepository;
 
     /**
+     * @var int
+     */
+    private $limit;
+
+    /**
      * @param Data $helper
      * @param StoreManagerInterface $storeManager
      * @param Manager $eventManager
@@ -75,6 +86,7 @@ class Massapiproducts implements ObserverInterface
         $this->categoryRepository           = $categoryRepository;
         $this->productOptions               = $productOptions;
         $this->_stockItemRepository         = $stockItemRepository;
+        $this->limit = $this->helper->getRPRLimit();
     }
 
     /**
@@ -82,7 +94,7 @@ class Massapiproducts implements ObserverInterface
      *
      * @param EventObserver $observer
      * @return void
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function execute(EventObserver $observer)
     {
@@ -103,7 +115,7 @@ class Massapiproducts implements ObserverInterface
      * @param int $scopeId
      * @param object $scope
      * @return int
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function setWebsiteId($scopeId, $scope)
     {
@@ -120,9 +132,9 @@ class Massapiproducts implements ObserverInterface
      * Get Product collection
      *
      * @param int $websiteId
-     * @return \Magento\Catalog\Model\ResourceModel\Product\Collection
+     * @return Collection
      */
-    public function getProductCollection($websiteId)
+    public function getProductCollection($websiteId, $page)
     {
         $productCollection = $this->_productCollectionFactory->create();
 
@@ -130,6 +142,9 @@ class Massapiproducts implements ObserverInterface
             $productCollection = $productCollection
                 ->addAttributeToSelect("*")
                 ->addWebsiteFilter($websiteId);
+            if (!empty($productCollection->getData()) && $page > 0) {
+                $productCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
+            }
         }
         return $productCollection;
     }
@@ -181,18 +196,24 @@ class Massapiproducts implements ObserverInterface
      * @param object $product
      * @param array $discount
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getMassProInfo($product, $discount)
     {
         $baseUrl = $this->_storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-        $stockItem = $this->_stockItemRepository->get($product->getId());
+
+        try {
+            $stockItem = $this->_stockItemRepository->get($product->getId());
+            $qty = $stockItem->getQty();
+        } catch (\Exception $exception) {
+            $qty = 0;
+        }
         return [
             'product_id'        => $product->getId(),
             'name'              => $product->getName(),
             'description'       => $product->getDescription(),
             'short_description' => $product->getShortDescription(),
-            'stock_quantity'    => $stockItem->getQty(),
+            'stock_quantity'    => $qty,
             'price'             => $product->getPrice(),
             'discount'          => $discount,
             'image_link'        => $baseUrl.'catalog/product'.$product->getImage(),
@@ -204,16 +225,17 @@ class Massapiproducts implements ObserverInterface
      * Get Product data
      *
      * @param object $requestData
-     * @return void
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @return string
+     * @throws LocalizedException
      */
     public function getProductData($requestData)
     {
         $websiteId = $this->_storeManager->getWebsite()->getId();
         $uuid = $requestData['uuid'];
         $storeId = $requestData['store_id'];
+        $page = $requestData['cycle_count'];
 
-        return $this->massApiProductAction('sendMass', $uuid, $websiteId, 0, 0, $storeId);
+        return $this->massApiProductAction('sendMass', $uuid, $websiteId, 0, 0, $storeId, $page);
     }
 
     /**
@@ -225,16 +247,16 @@ class Massapiproducts implements ObserverInterface
      * @param int $scopeId
      * @param int $scope
      * @param int $storeId
-     * @return string|void
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @return string|array
+     * @throws NoSuchEntityException
      */
-    public function massApiProductAction($callFrom, $uuid, $websiteId, $scopeId, $scope, $storeId)
+    public function massApiProductAction($callFrom, $uuid, $websiteId, $scopeId, $scope, $storeId, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $productCollection = $this->getProductCollection($websiteId);
+        $productCollection = $this->getProductCollection($websiteId, $page);
+
         if (!empty($productCollection) && count($productCollection)>0) {
-            $p = $i = 0;
-            $total_products = count($productCollection);
+            $i = 0;
             $mass_data = $this->getMassProData($uuid);
 
             foreach ($productCollection as $product) {
@@ -251,27 +273,17 @@ class Massapiproducts implements ObserverInterface
                 $proCollection = $this->productOptions->getProductOptionCollection($product);
                 $mass_data['data'][0]['object'][$i]['product_options'] = $proCollection;
                 $i++;
-                $p++;
-
-                if ($i == 100 || $p == $total_products) {
-                    $responseArr = $this->helper->curl($apiUrl, $mass_data);
-                    //response will contain the output in form of JSON string
-
-                    $i = 0;
-                    $mass_data['data'][0]['object'] = [];
-
-                    if ($p == $total_products) {
-                        if (!empty($responseArr['message']) && $callFrom == 'eventMass') {
-                            $dispatchArr = ['uuid' => $uuid, 'scopeId' => $scopeId, 'scope' => $scope];
-                            $this->_eventManager->dispatch('waymoreroutee_massapiproduct_complete', $dispatchArr);
-                        } else {
-                            return "ProductDone";
-                        }
-                    }
+            }
+            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+            $result = ['reload' => 0];
+            if (!empty($responseArr['message'])) {
+                if ($i < $this->limit) {
+                    $result = ['reload' => 1];
                 }
             }
         } else {
-            return "ProductDone";
+            $result = ['reload' => 1];
         }
+        return $result;
     }
 }

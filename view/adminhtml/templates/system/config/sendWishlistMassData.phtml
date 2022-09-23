@@ -1,0 +1,18 @@
+<div class="pp-buttons-container">
+    <p>
+        <button data-action="wishlist_data" class="send_mass_data" id="wishlist_mass_data" type="button">
+            <?= $block->escapeHtml(__('Start Syncing')) ?>
+        </button>
+    </p>
+</div>
+<?php if ($block->dataSynced()): ?>
+    <script type="text/javascript">
+        document.getElementById("wishlist_mass_data").setAttribute("disabled", "true");
+    </script>
+<?php else: ?>
+    <style>
+        #row_waymoreroutee_exportdata_mass_import_wishlist .note span{
+            display: none;
+        }
+    </style>
+<?php endif; ?>

@@ -9,10 +9,13 @@ use Magento\Framework\HTTP\Client\Curl;
 use Magento\Directory\Model\CountryFactory;
 use Magento\Store\Model\ScopeInterface;
 
+/**
+ * Helper class
+ */
 class Data extends AbstractHelper
 {
     /**
-     * @var \Magento\Framework\App\Http\Context
+     * @var HttpContext
      */
     private $httpContext;
 
@@ -30,6 +33,11 @@ class Data extends AbstractHelper
      * @var CountryFactory
      */
     protected $_countryFactory;
+
+    /**
+     * Mass data export records per request limit
+     */
+    const RPR_LIMIT = 100;
 
     /**
      * @param Context $context
@@ -74,6 +82,23 @@ class Data extends AbstractHelper
         }
         
         return $apiUrl;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRPRLimit()
+    {
+        return self::RPR_LIMIT;
+    }
+
+    /**
+     * @param $path
+     * @return mixed
+     */
+    public function getConfigValue($path)
+    {
+        return $this->scopeConfig->getValue($path);
     }
 
     /**

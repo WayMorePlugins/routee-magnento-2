@@ -7,6 +7,9 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Newsletter\Model\ResourceModel\Subscriber\CollectionFactory;
 use Magento\Store\Model\ScopeInterface;
 
+/**
+ * Mass data export class for Newsletter subscribers data
+ */
 class Massapisubscribers implements ObserverInterface
 {
     /**
@@ -20,6 +23,11 @@ class Massapisubscribers implements ObserverInterface
     protected $_subcriberCollectionFactory;
 
     /**
+     * @var int
+     */
+    private $limit;
+
+    /**
      * @param Data $helper
      * @param CollectionFactory $subcriberCollectionFactory
      */
@@ -29,6 +37,7 @@ class Massapisubscribers implements ObserverInterface
     ) {
         $this->helper   = $helper;
         $this->_subcriberCollectionFactory = $subcriberCollectionFactory;
+        $this->limit = $this->helper->getRPRLimit();
     }
 
     /**
@@ -59,7 +68,8 @@ class Massapisubscribers implements ObserverInterface
     {
         $uuid = $requestData['uuid'];
         $storeId = $requestData['store_id'];
-        return $this->massApiSubscriberAction($uuid, 'sendMass', $storeId, 0, 0);
+        $page = $requestData['cycle_count'];
+        return $this->massApiSubscriberAction($uuid, 'sendMass', $storeId, 0, 0, $page);
     }
 
     /**
@@ -71,7 +81,7 @@ class Massapisubscribers implements ObserverInterface
      * @param int $scope
      * @return \Magento\Newsletter\Model\ResourceModel\Subscriber\Collection
      */
-    public function getSubscriberCollection($callFrom, $storeId, $scopeId, $scope)
+    public function getSubscriberCollection($callFrom, $storeId, $scopeId, $scope, $page)
     {
         $subscriberCollection = $this->_subcriberCollectionFactory->create();
         if ($scope == ScopeInterface::SCOPE_STORES) {
@@ -81,8 +91,10 @@ class Massapisubscribers implements ObserverInterface
         if ($callFrom == 'sendMass') {
             $subscriberCollection = $this->_subcriberCollectionFactory->create();
             $subscriberCollection->addStoreFilter($storeId);
+            if (!empty($subscriberCollection->getData()) && $page > 0) {
+                $subscriberCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
+            }
         }
-
         return $subscriberCollection;
     }
 
@@ -139,38 +151,31 @@ class Massapisubscribers implements ObserverInterface
      * @param int $storeId
      * @param int $scopeId
      * @param int $scope
-     * @return string|void
+     * @return string|array
      */
-    public function massApiSubscriberAction($uuid, $callFrom, $storeId, $scopeId, $scope)
+    public function massApiSubscriberAction($uuid, $callFrom, $storeId, $scopeId, $scope, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $subscriberCollection = $this->getSubscriberCollection($callFrom, $storeId, $scopeId, $scope);
+        $subscriberCollection = $this->getSubscriberCollection($callFrom, $storeId, $scopeId, $scope, $page);
+
         if (!empty($subscriberCollection) && count($subscriberCollection)>0) {
-            $s = $i = 0;
-            $total_subscribers = count($subscriberCollection);
+            $i = 0;
             $mass_data = $this->getMassData($uuid);
             foreach ($subscriberCollection as $subscriber) {
                 $subscriberInfo = $this->getSubscriberInfo($subscriber, $scopeId, $storeId, $callFrom);
                 $mass_data['data'][0]['object'][$i] = $subscriberInfo;
                 $i++;
-                $s++;
-                if ($i == 100 || $s == $total_subscribers) {
-                    $responseArr = $this->helper->curl($apiUrl, $mass_data);
-                    //response will contain the output in form of JSON string
-                    $i = 0;
-                    $mass_data['data'][0]['object'] = [];
-                    if ($s == $total_subscribers) {
-                        if (!empty($responseArr['message']) && $callFrom == 'eventMass') {
-                            $dispatchArr = ['uuid' => $uuid, 'scopeId' => $scopeId, 'scope' => $scope];
-                            $this->_eventManager->dispatch('waymoreroutee_massapisubscriber_complete', $dispatchArr);
-                        } else {
-                            return "SubscriberDone";
-                        }
-                    }
+            }
+            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+            $result = ['reload' => 0];
+            if (!empty($responseArr['message'])) {
+                if ($i < $this->limit) {
+                    $result = ['reload' => 1];
                 }
             }
         } else {
-            return "SubscriberDone";
+            $result = ['reload' => 1];
         }
+        return $result;
     }
 }
