@@ -12,7 +12,7 @@
         let dtransferred = "<?php echo $block->completeDataSynced(); ?>";
         let getuuid = "<?php echo $block->getUUID(); ?>";
         if (!getuuid) {
-            document.getElementsByClassName("send_mass_data").setAttribute("disabled", "true");
+            $(".send_mass_data").attr("disabled", "true");
         }
 
         if (getuuid) {

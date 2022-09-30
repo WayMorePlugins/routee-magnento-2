@@ -6,6 +6,7 @@ use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Exception\AuthorizationException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\Data;
@@ -100,19 +101,26 @@ class ConfigObserver implements ObserverInterface
 
                 if ($params["username"] != '' && $params["password"] != '') {
                     $responseArr = $this->helper->curl($apiUrl, $params);
-                    $rsMsg = 'You are unauthorized. Invalid username or password';
-                    if (isset($responseArr['message']) && $responseArr['message'] == $rsMsg) {
-                        throw new \Magento\Framework\Exception\CouldNotDeleteException(__($responseArr['message']));
+                    if (isset($responseArr['message'])) {
+                        $this->saveDefaultValues();
+                        throw new AuthorizationException(__($responseArr['message']));
                     } else {
-                        $newUuid = $responseArr['uuid'] ?? $uuld;
+                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
                     }
-                    
-                    $this->configWriter->save('waymoreroutee/general/uuid', $newUuid, $this->scope, $this->scopeId);
                 }
             }
         } else {
-            $this->configWriter->save('waymoreroutee/general/uuid', '', $this->scope, $this->scopeId);
+            $this->saveDefaultValues();
+            $error = "You must enable the module to save the data";
+            throw new LocalizedException(__($error));
         }
+    }
+
+    private function saveDefaultValues()
+    {
+        $this->configWriter->save('waymoreroutee/general/uuid', '', $this->scope, $this->scopeId);
+        $this->configWriter->save('waymoreroutee/general/username', '', $this->scope, $this->scopeId);
+        $this->configWriter->save('waymoreroutee/general/password', '', $this->scope, $this->scopeId);
     }
 
     /**

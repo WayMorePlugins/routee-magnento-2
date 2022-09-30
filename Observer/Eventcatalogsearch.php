@@ -81,15 +81,19 @@ class Eventcatalogsearch implements ObserverInterface
      */
     public function getRequestParam()
     {
+        $email = $phone = "";
         $searchTerm = $this->_queryFactory->get()->getQueryText();
         $storeId    = $this->_storeManager->getStore()->getId();
         $uuid       = $this->helper->getUuid($storeId);
-        $customerId = $this->_customerSession->getCustomer()->getId();
-
-        $data = [];
-        $data['uuid'] = $uuid;
-        $data['event'] = 'Search';
+        $customer = $this->_customerSession->getCustomer();
+        $customerId = !is_null($customer->getId()) ? $customer->getId() : 0;
+        if ($customerId) {
+            $email = $customer->getEmail();
+            $phone = $customer->getDefaultBillingAddress()->getTelephone();
+        }
         $data['data']['customer_id'] = $customerId;
+        $data['data']['email'] = $email;
+        $data['data']['phone'] = $phone;
         $data['data']['search_string'] = $searchTerm;
         return [
             'uuid' => $uuid,

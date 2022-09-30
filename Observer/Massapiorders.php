@@ -83,7 +83,7 @@ class Massapiorders implements ObserverInterface
             $orderCollection = $orderCollection->addStoreFilter($scopeId);
         } else {
             $orderCollection = $orderCollection->addAttributeToFilter("store_id", ["eq" => $storeId]);
-            if (!empty($orderCollection->getData()) && $page > 0) {
+            if (!empty($orderCollection->getData())  && $page > 0){
                 $orderCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }
@@ -144,7 +144,7 @@ class Massapiorders implements ObserverInterface
         $uuid = $requestData['uuid'];
         $storeId = $requestData['store_id'];
         $page = $requestData['cycle_count'];
-        return $this->massApiOrderAction('eventRequest', $uuid, 0, 0, $storeId, $page);
+        return $this->massApiOrderAction('eventRequest', $uuid, 0, 0, $storeId, $page );
     }
 
     /**

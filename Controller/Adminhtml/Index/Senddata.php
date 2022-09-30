@@ -118,26 +118,26 @@ class Senddata extends Action
         if ($this->getRequest()->isAjax()) {
             $GET = $this->getRequest()->getParams();
             $result = [];
-            switch ($GET['action']) {
+            switch ($GET['action']){
                 case 'product_data':
                     $result = $this->handleProductExport($GET);
-                    break;
+                break;
 
                 case 'customer_data':
                     $result = $this->handleCustomerExport($GET);
-                    break;
+                break;
 
                 case 'order_data':
                     $result = $this->handleOrderExport($GET);
-                    break;
+                break;
 
                 case 'subscriber_data':
                     $result = $this->handleSubscriberExport($GET);
-                    break;
+                break;
 
                 case 'wishlist_data':
                     $result = $this->handleWishlistExport($GET);
-                    break;
+                break;
             }
 
             if ($result) {
