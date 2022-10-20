@@ -7,8 +7,10 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\AuthorizationException;
+use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\ScopeInterface;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\Module\ResourceInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -77,7 +79,7 @@ class ConfigObserver implements ObserverInterface
      * @return void
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\CouldNotDeleteException
+     * @throws CouldNotDeleteException
      */
     public function execute(EventObserver $observer)
     {
@@ -101,11 +103,11 @@ class ConfigObserver implements ObserverInterface
 
                 if ($params["username"] != '' && $params["password"] != '') {
                     $responseArr = $this->helper->curl($apiUrl, $params);
-                    if (isset($responseArr['message'])) {
+                    if (isset($responseArr['uuid'])) {
+                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
+                    } else {
                         $this->saveDefaultValues();
                         throw new AuthorizationException(__($responseArr['message']));
-                    } else {
-                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
                     }
                 }
             }
@@ -163,10 +165,10 @@ class ConfigObserver implements ObserverInterface
     {
         if ($this->storeId > 0) {
             $this->scopeId = $this->_storeManager->getStore()->getId();
-            $this->scope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
+            $this->scope = ScopeInterface::SCOPE_STORES;
         } elseif ($this->websiteId > 0) {
             $this->scopeId = $this->_storeManager->getWebsite()->getId();
-            $this->scope = \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES;
+            $this->scope = ScopeInterface::SCOPE_WEBSITES;
         } else {
             $this->scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
             $this->scopeId = 0;
