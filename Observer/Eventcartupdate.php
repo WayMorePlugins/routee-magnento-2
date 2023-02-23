@@ -41,9 +41,13 @@ class Eventcartupdate implements ObserverInterface
         $isEnabled = $this->helper->getIsEnabled();
         //getStoreId
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('CartUpdate', 'events');
+
             $apiUrl = $this->helper->getApiurl('events');
             $params = $this->getRequestParam($observer);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('CartUpdate', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 
@@ -76,6 +80,8 @@ class Eventcartupdate implements ObserverInterface
             $data['data'][]['cart_products'][] = $cartDetails;
         }
         $data['data'][]['cart_url'] = $this->_urlInterface->getUrl('checkout/cart');
+
+        $this->helper->eventGrabDataLog('CartUpdate', $data, 'events');
 
         return [
             'uuid' => $uuid,

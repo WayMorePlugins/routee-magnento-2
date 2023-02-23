@@ -31,14 +31,19 @@ class Eventsstockorderupdate implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('ProductStockUpdate', 'events');
+
             $order      = $observer->getEvent()->getOrder();
             $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
             $apiUrl     = $this->helper->getApiurl('events');
             $data       = $this->getOrderStockData($uuid, $order);
+            $this->helper->eventGrabDataLog('ProductStockUpdate', $data, 'events');
 
             $params     = $this->helper->getRequestParam('ProductStockUpdate', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('ProductStockUpdate', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 

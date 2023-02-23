@@ -50,6 +50,8 @@ class Massapisubscribers implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('MassSubscriber', 'mass data');
+
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
             $scope      = $observer->getData('scope');
@@ -158,6 +160,8 @@ class Massapisubscribers implements ObserverInterface
         $apiUrl     = $this->helper->getApiurl('massData');
         $subscriberCollection = $this->getSubscriberCollection($callFrom, $storeId, $scopeId, $scope, $page);
 
+        $this->helper->eventGrabDataLog('MassSubscriber', count($subscriberCollection), 'mass data');
+
         if (!empty($subscriberCollection) && count($subscriberCollection)>0) {
             $i = 0;
             $mass_data = $this->getMassData($uuid);
@@ -166,7 +170,10 @@ class Massapisubscribers implements ObserverInterface
                 $mass_data['data'][0]['object'][$i] = $subscriberInfo;
                 $i++;
             }
-            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+
+            $this->helper->eventPayloadDataLog('MassSubscriber', $mass_data, 'mass data');
+
+            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {

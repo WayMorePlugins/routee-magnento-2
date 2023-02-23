@@ -7,12 +7,12 @@ use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Routee\WaymoreRoutee\Helper\Data;
 
-class SendWishlistMassData extends Field
+class ExportLogsCSV extends Field
 {
     /**
      * @var string
      */
-    protected $_template = 'Routee_WaymoreRoutee::system/config/sendWishlistMassData.phtml';
+    protected $_template = 'Routee_WaymoreRoutee::system/config/exportLogs.phtml';
 
     /**
      * @var object
@@ -75,7 +75,7 @@ class SendWishlistMassData extends Field
         $this->addData(
             [
                 'id' => 'send_mass_data',
-                'label' => __('Start Sync')
+                'label' => __('Start Sync'),
             ]
         );
         return $this->_toHtml();
@@ -84,9 +84,18 @@ class SendWishlistMassData extends Field
     /**
      * @return string
      */
-    public function dataSynced()
+    public function getAjaxUrlCsv()
     {
-        $path = "waymoreroutee/general/wishlistmass";
-        return !empty($this->helper->getConfigValue($path));
+        $uuid = $this->getUUID();
+        return $this->getUrl('waymoreroutee/logs/exportlogs').'?store_id='.$this->storeId.'&uuid='.$uuid.'&method=csv';
+    }
+
+    /**
+     * @return string
+     */
+    public function getUUID()
+    {
+        $this->storeId = $this->_storeManager->getStore()->getId();
+        return $this->helper->getUuid($this->storeId);
     }
 }

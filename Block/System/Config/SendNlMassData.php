@@ -81,6 +81,9 @@ class SendNlMassData extends Field
         return $this->_toHtml();
     }
 
+    /**
+     * @return string
+     */
     public function dataSynced()
     {
         $path = "waymoreroutee/general/subscribermass";

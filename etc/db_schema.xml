@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="store_events_logs" resource="default" engine="innodb" comment="Routee save events logs table.">
+        <column xsi:type="int" name="id" nullable="false" identity="true" />
+        <column xsi:type="varchar" length="256" name="store_url" nullable="false" />
+        <column xsi:type="int" name="log_type" nullable="false" comment="0 for error, 1 for success"/>
+        <column xsi:type="int" name="event_type" nullable="false" comment="1 = auth, 2 = mass data, 3 = events"/>
+        <column xsi:type="json" name="log_data" nullable="false" />
+        <column xsi:type="int" name="is_exported" nullable="false" default="0" comment="0 for no, 1 for yes"/>
+        <column xsi:type="varchar" name="created_at" nullable="false" length="32" />
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+    </table>
+</schema>

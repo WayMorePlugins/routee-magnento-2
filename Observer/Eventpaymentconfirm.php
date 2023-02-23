@@ -39,6 +39,8 @@ class Eventpaymentconfirm implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('OrderPaymentConfirmed', 'events');
+
             $invoice    = $observer->getEvent()->getInvoice();
             $storeId    = $invoice->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
@@ -46,9 +48,12 @@ class Eventpaymentconfirm implements ObserverInterface
             $customerId = $order->getCustomerId();
             $apiUrl     = $this->helper->getApiurl('events');
             $data       = $this->getOrderPaymentData($customerId, $invoice, $uuid);
+            $this->helper->eventGrabDataLog('OrderPaymentConfirmed', $data, 'events');
 
             $params     = $this->helper->getRequestParam('OrderPaymentConfirmed', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+            $this->helper->eventPayloadDataLog('OrderPaymentConfirmed', $params, 'events');
+
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 

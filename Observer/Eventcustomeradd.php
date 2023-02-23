@@ -31,11 +31,16 @@ class Eventcustomeradd implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('CustomerAdd', 'events');
+
             $customer   = $observer->getEvent()->getCustomer();
             $storeId    = $customer->getStoreId();
             $apiUrl     = $this->helper->getApiurl('events');
             $customers  = $this->helper->getCustomerInfo($customer);
             $addresses  = $customer->getAddresses();
+
+            $this->helper->eventGrabDataLog('CustomerAdd', $customers, 'events');
+            $this->helper->eventGrabDataLog('CustomerAdd', $addresses, 'events');
 
             $addrs = [];
             if (empty($addresses)) {
@@ -50,7 +55,9 @@ class Eventcustomeradd implements ObserverInterface
 
             $data   = $this->helper->getCustomerReqData('CustomerAdd', $customers, $addrs, $storeId);
             $params = $this->helper->getRequestParam('CustomerAdd', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('CustomerAdd', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 }

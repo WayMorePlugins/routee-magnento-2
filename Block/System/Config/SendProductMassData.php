@@ -81,24 +81,36 @@ class SendProductMassData extends Field
         return $this->_toHtml();
     }
 
+    /**
+     * @return string
+     */
     public function getAjaxUrl()
     {
         $uuid = $this->getUUID();
         return $this->getUrl('waymoreroutee/index/senddata').'?store_id='.$this->storeId.'&uuid='.$uuid;
     }
 
+    /**
+     * @return string
+     */
     public function getUUID()
     {
         $this->storeId = $this->_storeManager->getStore()->getId();
         return $this->helper->getUuid($this->storeId);
     }
 
+    /**
+     * @return string
+     */
     public function dataSynced()
     {
         $path = "waymoreroutee/general/productmass";
         return !empty($this->helper->getConfigValue($path));
     }
 
+    /**
+     * @return bool
+     */
     public function completeDataSynced()
     {
         $data = [

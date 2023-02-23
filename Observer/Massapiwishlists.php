@@ -59,6 +59,8 @@ class Massapiwishlists implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('MassWishlist', 'mass data');
+
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
             $scope      = $observer->getData('scope');
@@ -140,7 +142,9 @@ class Massapiwishlists implements ObserverInterface
     {
         $apiUrl     = $this->helper->getApiurl('massData');
         $wishlistCollection = $this->getWishlistCollection($callFrom, $storeId, $scopeId, $scope, $page);
-        
+
+        $this->helper->eventGrabDataLog('MassWishlist', count($wishlistCollection), 'mass data');
+
         if (!empty($wishlistCollection) && count($wishlistCollection)>0) {
             $i = 0;
             $mass_data = $this->getMassData($uuid);
@@ -151,7 +155,10 @@ class Massapiwishlists implements ObserverInterface
                 ];
                 $i++;
             }
-            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+
+            $this->helper->eventPayloadDataLog('MassWishlist', $mass_data, 'mass data');
+
+            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {

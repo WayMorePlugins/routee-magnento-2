@@ -31,6 +31,8 @@ class Eventorderstatuschange implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('OrderStatusUpdate', 'events');
+
             $order      = $observer->getEvent()->getOrder();
             $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
@@ -38,8 +40,11 @@ class Eventorderstatuschange implements ObserverInterface
             $apiUrl     = $this->helper->getApiurl('events');
 
             $data       = $this->getOrderData($customerId, $uuid, $order);
+            $this->helper->eventGrabDataLog('OrderStatusUpdate', $data, 'events');
+
             $params     = $this->helper->getRequestParam('OrderStatusUpdate', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+            $this->helper->eventPayloadDataLog('OrderStatusUpdate', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 

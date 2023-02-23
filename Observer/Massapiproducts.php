@@ -100,6 +100,8 @@ class Massapiproducts implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('MassProduct', 'mass data');
+
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
             $scope      = $observer->getData('scope');
@@ -255,6 +257,8 @@ class Massapiproducts implements ObserverInterface
         $apiUrl     = $this->helper->getApiurl('massData');
         $productCollection = $this->getProductCollection($websiteId, $page);
 
+        $this->helper->eventGrabDataLog('MassProduct', count($productCollection), 'mass data');
+
         if (!empty($productCollection) && count($productCollection)>0) {
             $i = 0;
             $mass_data = $this->getMassProData($uuid);
@@ -274,7 +278,10 @@ class Massapiproducts implements ObserverInterface
                 $mass_data['data'][0]['object'][$i]['product_options'] = $proCollection;
                 $i++;
             }
-            $responseArr = $this->helper->curl($apiUrl, $mass_data);
+
+            $this->helper->eventPayloadDataLog('MassProduct', $mass_data, 'mass data');
+
+            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {

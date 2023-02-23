@@ -150,6 +150,10 @@ class Senddata extends Action
         return '';
     }
 
+    /**
+     * @param  $GET
+     * @return object
+     */
     private function handleProductExport($GET)
     {
         $result = $this->_massApiProObserver->getProductData($GET);
@@ -159,6 +163,10 @@ class Senddata extends Action
         return $result;
     }
 
+    /**
+     * @param  $GET
+     * @return object
+     */
     private function handleCustomerExport($GET)
     {
         $result = $this->_massApiCustObserver->getCustomerData($GET);
@@ -168,6 +176,10 @@ class Senddata extends Action
         return $result;
     }
 
+    /**
+     * @param  $GET
+     * @return object
+     */
     private function handleOrderExport($GET)
     {
         $result = $this->_massApiOrdObserver->getOrderData($GET);
@@ -177,6 +189,10 @@ class Senddata extends Action
         return $result;
     }
 
+    /**
+     * @param  $GET
+     * @return object
+     */
     private function handleSubscriberExport($GET)
     {
         $result = $this->_massApiSubObserver->getSubscriberData($GET);
@@ -186,6 +202,10 @@ class Senddata extends Action
         return $result;
     }
 
+    /**
+     * @param  $GET
+     * @return object
+     */
     private function handleWishlistExport($GET)
     {
         $result = $this->_massApiWishObserver->getWishlistData($GET);

@@ -41,15 +41,16 @@ class Eventproductoutofstock implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('ProductOutOfStock', 'events');
+
             $product    = $observer->getEvent()->getProduct();
             $id         = $product->getId(); //Get Product Id
             $storeId    = $this->_storeManager->getStore()->getId();
             $uuid       = $this->helper->getUuid($storeId);
             $apiUrl     = $this->helper->getApiurl('events');
             
-            //Old implementation to get stock quantity but commented by KH on 14th Jan
-            //$qty = $this->_stockItem->getStockItem($product->getId())->getQty();
-            
+            $this->helper->eventGrabDataLog('ProductOutOfStock', $product, 'events');
+
             $getStockItem = $product->getExtensionAttributes()->getStockItem();
             if (isset($getStockItem)) {
                 $qty = $getStockItem->getQty();
@@ -57,7 +58,9 @@ class Eventproductoutofstock implements ObserverInterface
                 if ($qty < 1) {
                     $data   = $this->getOutofStockData($uuid, $id);
                     $params = $this->helper->getRequestParam('ProductOutOfStock', $data, $storeId);
-                    $this->helper->curl($apiUrl, $params);
+                    $this->helper->eventPayloadDataLog('ProductOutOfStock', $params, 'events');
+
+                    $this->helper->curl($apiUrl, $params, 'events');
                 }
             }
         }

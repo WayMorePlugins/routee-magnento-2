@@ -1,0 +1,125 @@
+
+    <div class="pp-buttons-container">
+        <p>
+            <button data-action="export_log_csv" class="routee-log-export-btn" id="routee-log-export-btn" type="button">
+                <?= $block->escapeHtml(__('Logs CSV')) ?>
+            </button>
+        </p>
+    </div>
+
+<script type="text/javascript">
+    requirejs(['jquery'], function($) {
+        //Download Log CSV file
+        $("#routee-log-export-btn").click(function (event) {
+            event.preventDefault();
+            $(this).attr("disabled", "true");
+            action = $(this).attr("data-action");
+            let data = {'action' :action};
+            let logurl = "<?= $block->getAjaxUrlCsv(); ?>";
+            make_log_ajax(logurl, data, 'logs');
+        })
+
+        /**
+         *
+         * @param data
+         * @param type
+         */
+        function make_log_ajax(logurl, data, type) {
+            $.ajax({
+                type: "POST",
+                url: logurl,
+                data: data,
+                dataType: 'json',
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log('error ' + textStatus);
+                console.log(errorThrown);
+                console.log(jqXHR);
+            }).done(function (data, textStatus, jqXHR) {
+                if(type == 'logs') {
+                    generate_csv(data)
+                }
+            });
+        }
+
+        /**
+         *
+         * @param success
+         */
+        function generate_csv(success) {
+            if (success.success == "yes") {
+                var rec_arr = success.data;
+                let csv_arr = [];
+                let csv_header_arr = [
+                    "ID",
+                    "Store Url",
+                    "Log Type",
+                    "Event Type",
+                    "Log Date",
+                    "Is Exported",
+                    "Created at"
+                ];
+                csv_arr.push(csv_header_arr);
+                let record_arr = [];
+
+                for (i = 0; i < rec_arr.length; i++) {
+
+                    record_arr.push(rec_arr[i].id);
+                    record_arr.push(rec_arr[i].store_url);
+                    record_arr.push(rec_arr[i].log_type);
+                    record_arr.push(rec_arr[i].event_type);
+                    record_arr.push(rec_arr[i].log_data);
+                    record_arr.push(rec_arr[i].is_exported);
+                    record_arr.push(rec_arr[i].created_at);
+                    csv_arr.push(record_arr);
+                    record_arr = [];
+                }
+
+                var csv_content = arrayToCsv(csv_arr);
+                var timeElapsed = Date.now();
+                var today = new Date(timeElapsed);
+                var year = today.getFullYear();
+                var month = today.getMonth() + 1;
+                var day = today.getDate();
+                var filename = "Routee_Log_" + year + month + day + ".csv";
+                downloadBlob(csv_content, filename, "text/csv;charset=utf-8;");
+            }
+        }
+
+        /**
+         *
+         * @param content
+         * @param filename
+         * @param contentType
+         */
+        function downloadBlob(content, filename, contentType) {
+            // Create a blob
+            var blob = new Blob([content], { type: contentType });
+            var url = URL.createObjectURL(blob);
+
+            // Create a link to download it
+            var pom = document.createElement("a");
+            pom.href = url;
+            pom.setAttribute("download", filename);
+            pom.click();
+            pom.remove();
+        }
+
+        /**
+         *
+         * @param data
+         * @returns {*}
+         */
+        function arrayToCsv(data) {
+            return data
+                .map(
+                    (row) =>
+                        row
+                            .map(String) // convert every value to String
+                            .map((v) => v.replaceAll('"', '""')) // escape double colons
+                            .map((v) => `"${v}"`) // quote it
+                            .join(",") // comma-separated
+                )
+                .join("\r\n"); // rows starting on new lines
+        }
+    });
+</script>

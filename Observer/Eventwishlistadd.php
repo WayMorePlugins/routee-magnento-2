@@ -50,14 +50,20 @@ class Eventwishlistadd implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('WishlistAdd', 'events');
+
             $wishlistItem   = $observer->getItems();
             $storeId        = $this->_storeManager->getStore()->getId();
             $uuid           = $this->helper->getUuid($storeId);
             $customerId     = $this->_customerSession->getCustomer()->getId();
             $apiUrl         = $this->helper->getApiurl('events');
             $data           = $this->getWishlistData($uuid, $customerId, $wishlistItem);
+            $this->helper->eventGrabDataLog('WishlistAdd', $data, 'events');
+
             $params         = $this->helper->getRequestParam('WishlistAdd', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('WishlistAdd', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 

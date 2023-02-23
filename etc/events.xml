@@ -65,4 +65,8 @@
         <observer name="waymoreroutee_eventsapiorderstockupdate_call" instance="Routee\WaymoreRoutee\Observer\Eventsstockorderupdate" />
     </event>
 	<!-- Events API Calls End -->
+
+	<event name="backend_auth_user_login_success">
+		<observer name="waymoreroutee_success_login" instance="Routee\WaymoreRoutee\Observer\AdminLoginSucceeded" />
+	</event>
 </config>

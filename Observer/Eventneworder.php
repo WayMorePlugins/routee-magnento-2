@@ -49,6 +49,8 @@ class Eventneworder implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('OrderAdd', 'events');
+
             $order      = $observer->getEvent()->getOrder();
             $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
@@ -59,8 +61,13 @@ class Eventneworder implements ObserverInterface
             $orderDetails       = $this->getOrderDetails($order, $checkSubscriber);
             $orderProducts      = $this->getOrderProducts($order);
             $data               = $this->getOrderData($uuid, $customerId, $orderDetails, $orderProducts);
+
+            $this->helper->eventGrabDataLog('OrderAdd', $data, 'events');
+
             $params             = $this->helper->getRequestParam('OrderAdd', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('OrderAdd', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 

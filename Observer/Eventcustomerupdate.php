@@ -49,12 +49,17 @@ class Eventcustomerupdate implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('CustomerUpdate', 'events');
+
             $customer       = $this->_customerSession->getCustomer()->getId();
             $storeId        = $observer->getEvent()->getStoreId();
             $apiUrl         = $this->helper->getApiurl('events');
             $customers      = $this->helper->getCustomerInfo($this->_customerSession->getCustomer());
-
             $addresses      = $this->_customerSession->getCustomer()->getAddresses();
+
+            $this->helper->eventGrabDataLog('CustomerUpdate', $customers, 'events');
+            $this->helper->eventGrabDataLog('CustomerUpdate', $addresses, 'events');
+
             $addrs = [];
             if (empty($addresses)) {
                 $customers['phone'] = "";
@@ -68,7 +73,9 @@ class Eventcustomerupdate implements ObserverInterface
 
             $data   = $this->helper->getCustomerReqData('CustomerUpdate', $customers, $addrs, $storeId);
             $params = $this->helper->getRequestParam('CustomerUpdate', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('CustomerUpdate', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 }

@@ -70,13 +70,20 @@ class Eventnewproduct implements ObserverInterface
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
             $product    = $observer->getEvent()->getProduct();
+            $eventName = $product->isObjectNew() ? 'ProductAdd' : 'ProductUpdate';
+            $this->helper->eventExecutedLog($eventName, 'events');
+
             $storeId    = $this->_storeManager->getStore()->getId();
             $uuid       = $this->helper->getUuid($storeId);
             $apiUrl     = $this->helper->getApiurl('events');
-            $data       = $this->getProductData($product, $uuid, $storeId);
+            $data       = $this->getProductData($product, $uuid, $storeId, $eventName);
+
+            $this->helper->eventGrabDataLog($eventName, $data, 'events');
 
             $params     = $this->helper->getRequestParam($data['event'], $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog($eventName, $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 
@@ -89,14 +96,14 @@ class Eventnewproduct implements ObserverInterface
      * @return array
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getProductData($product, $uuid, $storeId)
+    public function getProductData($product, $uuid, $storeId, $eventName)
     {
         $baseUrl = $this->_storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
         $stockItem = $this->stockItemRepository->get($product->getId());
 
         return [
             'uuid'      => $uuid,
-            'event'     => $product->isObjectNew() ? 'ProductAdd' : 'ProductUpdate',
+            'event'     => $eventName,
             'data'      => [
                 'product_id'        => $product->getId(),
                 'name'              => $product->getName(),

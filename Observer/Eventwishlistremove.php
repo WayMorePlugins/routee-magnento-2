@@ -68,6 +68,8 @@ class Eventwishlistremove implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('WishlistDelete', 'events');
+
             /*Get item id and then pass into item collection to know the product id
             which is required to pass over routee json*/
             $item = $this->request->getParam('item');
@@ -82,8 +84,12 @@ class Eventwishlistremove implements ObserverInterface
             $customerId = $this->_customerSession->getCustomer()->getId();
             $apiUrl     = $this->helper->getApiurl('events');
             $data       = $this->getWishlistRemoveData($uuid, $customerId, $productId);
+            $this->helper->eventGrabDataLog('WishlistDelete', $data, 'events');
+
             $params     = $this->helper->getRequestParam('WishlistDelete', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+
+            $this->helper->eventPayloadDataLog('WishlistDelete', $params, 'events');
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 

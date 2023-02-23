@@ -6,13 +6,27 @@ requirejs(['jquery'], function($){
     $('.send_mass_data').on("click", function (e) {
         $('.send_mass_data').attr("disabled", "true");
         action = $(this).attr("data-action");
-        make_ajax({action : action, cycle_count : count});
+        make_ajax(url, {action : action, cycle_count : count});
     })
 
-    function make_ajax(data) {
+    $("#routee-log-export-api").on("click", function (e) {
+        e.preventDefault();
+        $(this).attr("disabled", "true");
+        var bulklogaction = $(this).attr("data-action");
+        var bulklogurl = $(this).attr("data-url");
+        var bulklogdata = {'action' :bulklogaction, cycle_count : count};
+        make_ajax(bulklogurl, bulklogdata, 'logsapi');
+    })
+
+    /**
+     * @param  {apiurl}
+     * @param  {data}
+     * @return {void}
+     */
+    function make_ajax(apiurl, data) {
         $.ajax({
             type: "POST",
-            url: url,
+            url: apiurl,
             data: data,
             dataType: 'json',
         }).fail(function (jqXHR, textStatus, errorThrown) {
@@ -22,6 +36,10 @@ requirejs(['jquery'], function($){
         });
     }
 
+    /**
+     * @param  {data}
+     * @return {void}
+     */
     function process_result(data) {
         count++;
         if (data.reload === 1){

@@ -7,10 +7,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\AuthorizationException;
-use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Store\Model\ScopeInterface;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\Module\ResourceInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -79,10 +77,12 @@ class ConfigObserver implements ObserverInterface
      * @return void
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws CouldNotDeleteException
+     * @throws \Magento\Framework\Exception\CouldNotDeleteException
      */
     public function execute(EventObserver $observer)
     {
+        $this->helper->eventExecutedLog('Authentication', 'auth');
+
         $this->storeId   = $this->_request->getParam('store', 0);
         $this->websiteId = $this->_request->getParam('website', 0);
         $this->setScope();
@@ -90,6 +90,8 @@ class ConfigObserver implements ObserverInterface
 
         if ($isEnabled) {
             $postedData   = $this->_request->getPost()->get('groups');
+            $this->helper->eventGrabDataLog('Authentication', $postedData, 'auth');
+
             $postedDataFields = $postedData['general']['fields'];
             $postedDataUser = trim($postedDataFields['username']["value"]);
             $postedDataPass = trim($postedDataFields['password']["value"]);
@@ -102,12 +104,14 @@ class ConfigObserver implements ObserverInterface
                 $params = $this->getRequestParam($postedDataFields, $usernameMain, $passwordMain);
 
                 if ($params["username"] != '' && $params["password"] != '') {
-                    $responseArr = $this->helper->curl($apiUrl, $params);
-                    if (isset($responseArr['uuid'])) {
-                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
-                    } else {
+                    $this->helper->eventPayloadDataLog('Authentication', $params, 'auth');
+                    $responseArr = $this->helper->curl($apiUrl, $params, 'auth');
+
+                    if (isset($responseArr['message'])) {
                         $this->saveDefaultValues();
                         throw new AuthorizationException(__($responseArr['message']));
+                    } else {
+                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'] ?? '', $this->scope, $this->scopeId);
                     }
                 }
             }
@@ -118,6 +122,9 @@ class ConfigObserver implements ObserverInterface
         }
     }
 
+    /**
+     * @return void
+     */
     private function saveDefaultValues()
     {
         $this->configWriter->save('waymoreroutee/general/uuid', '', $this->scope, $this->scopeId);
@@ -165,10 +172,10 @@ class ConfigObserver implements ObserverInterface
     {
         if ($this->storeId > 0) {
             $this->scopeId = $this->_storeManager->getStore()->getId();
-            $this->scope = ScopeInterface::SCOPE_STORES;
+            $this->scope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
         } elseif ($this->websiteId > 0) {
             $this->scopeId = $this->_storeManager->getWebsite()->getId();
-            $this->scope = ScopeInterface::SCOPE_WEBSITES;
+            $this->scope = \Magento\Store\Model\ScopeInterface::SCOPE_WEBSITES;
         } else {
             $this->scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
             $this->scopeId = 0;

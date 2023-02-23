@@ -50,6 +50,8 @@ class Eventnewsletter implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
+            $this->helper->eventExecutedLog('Newsletter', 'events');
+
             $storeId        = $this->_storeManager->getStore()->getId();
             $uuid           = $this->helper->getUuid($storeId);
             $customerId     = $this->_customerSession->getCustomer()->getId();
@@ -58,8 +60,12 @@ class Eventnewsletter implements ObserverInterface
 
             $apiUrl         = $this->helper->getApiurl('events');
             $data           = $this->getNewsletterData($customerId, $uuid, $observer, $isSubscribed);
+            $this->helper->eventGrabDataLog('Newsletter', $data, 'events');
+
             $params         = $this->helper->getRequestParam('Newsletter', $data, $storeId);
-            $this->helper->curl($apiUrl, $params);
+            $this->helper->eventPayloadDataLog('Newsletter', $params, 'events');
+
+            $this->helper->curl($apiUrl, $params, 'events');
         }
     }
 
