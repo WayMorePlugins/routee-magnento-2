@@ -6,10 +6,14 @@ use Magento\Framework\Setup\InstallDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Config\Model\ResourceModel\Config;
-
+ 
 class InstallData implements InstallDataInterface
 {
+    /**
+     * @var $resourceConfig
+     */
     private $resourceConfig;
+
 
     /**
      * @param Config

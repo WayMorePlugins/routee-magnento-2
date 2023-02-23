@@ -82,6 +82,9 @@ class ExportLogs extends Action
         parent::__construct($context);
     }
 
+    /**
+     * @return string
+     */
     public function execute()
     {
         if ($this->getRequest()->isAjax()) {

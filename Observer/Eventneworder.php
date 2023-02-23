@@ -123,10 +123,34 @@ class Eventneworder implements ObserverInterface
             $orderProducts[] = [
                 'product_id' => $item->getProductId(),
                 'quantity' => $item->getQtyOrdered(),
-                'option_id' => $item->getItemId()
+                'option_id' => $this->getSelectedOptions($item),//$item->getItemId(),
+                'price' => $item->getOriginalPrice(),
+                'discount' => $item->getPrice()
             ];
         }
+
         return $orderProducts;
+    }
+
+    /**
+     * @param $item
+     * @return int
+     */
+    public function getSelectedOptions($item){
+        $optId = 0;
+        $options = $item->getProductOptions();
+        if ($options) {
+            if (isset($options['options'])) {
+                $optId = $options['options'][0]['option_id'];
+            }
+            if (isset($options['additional_options'])) {
+                $optId = $options['additional_options'][0]['option_id'];
+            }
+            if (isset($options['attributes_info'])) {
+                $optId = $options['attributes_info'][0]['option_id'];
+            }
+        }
+        return $optId;
     }
 
     /**
