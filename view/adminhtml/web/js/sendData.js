@@ -15,7 +15,7 @@ requirejs(['jquery'], function($){
         var bulklogaction = $(this).attr("data-action");
         var bulklogurl = $(this).attr("data-url");
         var bulklogdata = {'action' :bulklogaction, cycle_count : count};
-        make_ajax(bulklogurl, bulklogdata, 'logsapi');
+        make_ajax(bulklogurl, bulklogdata);
     })
 
     /**

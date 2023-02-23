@@ -125,7 +125,7 @@ class Eventneworder implements ObserverInterface
                 'quantity' => $item->getQtyOrdered(),
                 'option_id' => $this->getSelectedOptions($item),//$item->getItemId(),
                 'price' => $item->getOriginalPrice(),
-                'discount' => $item->getPrice()
+                'discounted_price' => $item->getPrice()
             ];
         }
 

@@ -35,8 +35,11 @@
                 console.log(errorThrown);
                 console.log(jqXHR);
             }).done(function (data, textStatus, jqXHR) {
-                if(type == 'logs') {
+                if(type == 'logs' && data != null) {
                     generate_csv(data)
+                    $("#routee-log-export-btn").after('<p class="note"><span>CSV Exported successfully.</span></p>')
+                } else {
+                    $("#routee-log-export-btn").after('<p class="note"><span>Nothing to export.</span></p>');
                 }
             });
         }

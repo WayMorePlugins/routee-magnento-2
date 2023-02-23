@@ -106,12 +106,12 @@ class ConfigObserver implements ObserverInterface
                 if ($params["username"] != '' && $params["password"] != '') {
                     $this->helper->eventPayloadDataLog('Authentication', $params, 'auth');
                     $responseArr = $this->helper->curl($apiUrl, $params, 'auth');
-
-                    if (isset($responseArr['message'])) {
+                    
+                    if (isset($responseArr['uuid'])) {
+                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
+                    } else {
                         $this->saveDefaultValues();
                         throw new AuthorizationException(__($responseArr['message']));
-                    } else {
-                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'] ?? '', $this->scope, $this->scopeId);
                     }
                 }
             }

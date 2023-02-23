@@ -90,7 +90,7 @@ class Data extends AbstractHelper
         $apiUrl = '';
         switch ($urlFor) {
             case "auth":
-                $apiUrl = 'https://waymore.routee.net/api/authenticate';
+                $apiUrl = 'https://api.waymore.io/api/authenticate';
                 break;
             case "massData":
                 $apiUrl = 'https://idata.routee.net/api/data';
@@ -347,7 +347,7 @@ class Data extends AbstractHelper
         $table = $this->resourceConnection->getTableName('store_events_logs');
         $isExported = $this->getConfigValue('routee/log/exported') ?? 0;
         $logType = ($code == 200) ? 1 : 0;
-        $storeUrl = $this->_storeManager->getStore()->getCurrentUrl(false);
+        $storeUrl = $this->_storeManager->getStore()->getUrl();
 
         $data = json_encode($logdata);
         $time = gmdate('d-m-Y H:i:s');
@@ -365,7 +365,7 @@ class Data extends AbstractHelper
             $apiUrl = $this->getApiurl('logs');
 
             $postArr = array(
-                'siteUrl' => $this->_storeManager->getStore()->getCurrentUrl(false),
+                'siteUrl' => $this->_storeManager->getStore()->getUrl(),
                 'uuid' => $this->getUuid(),
                 'event_name' => !empty($logdata['event']) ? $logdata['event'] : $logdata['mode'],
                 'log_type' => 'failure',

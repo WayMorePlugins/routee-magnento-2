@@ -102,8 +102,7 @@ class ExportLogs extends Action
 
             if ($result) {
                 $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-                $logData = ['success' => 'yes', 'data' => $result];
-                $response->setData($logData);
+                $response->setData($result);
                 return $response;
             }
         }
@@ -138,12 +137,12 @@ class ExportLogs extends Action
             foreach ($logs as $key => $log) {
                 $ids[] = $log['id'];
                 $postArr[] =  array(
-                    'siteUrl' => $this->_storeManager->getStore()->getBaseUrl(),//$this->_storeManager->getStore()->getCurrentUrl(false),
+                    'siteUrl' => $log['store_url'],
                     'uuid' => $this->helper->getUuid(),
-                    'event_name' => 'masslogs',
-                    'log_type' => 'failure',
-                    'log_data' => $log,
-                    'created_at' => gmdate('d-m-Y H:i:s'),
+                    'event_name' => $this->eventName($log['event_type']),
+                    'log_type' => $log['log_type'] == 1 ? 'success' : 'failure',
+                    'log_data' => $log['log_data'],
+                    'created_at' => $log['created_at'],
                     'platform' => "Magento2"
                 );
             }
@@ -161,6 +160,28 @@ class ExportLogs extends Action
 
         $this->routeeUpdateLogs($responseArr['code'] ?? '', $ids);
         return $result;
+    }
+
+    /**
+     * @param $eventType
+     * @return string
+     */
+    public function eventName($eventType) {
+        $name = '';
+
+        switch ($eventType) {
+            case 1:
+                $name = "auth";
+                break;
+            case 3:
+                $name = "massdata";
+                break;
+            case 2:
+                $name = "events";
+                break;
+        }
+
+        return $name;
     }
 
     /**

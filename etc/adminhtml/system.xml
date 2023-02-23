@@ -70,13 +70,11 @@
 
                 <field id="export_log_csv" translate="label comment tooltip" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Event Log Export</label>
-                    <comment>CSV Exported successfully.</comment>
                     <frontend_model>Routee\WaymoreRoutee\Block\System\Config\ExportLogsCSV</frontend_model>
                 </field>
 
                 <field id="exportlogsapi" translate="label comment tooltip" type="button" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Export Logs API</label>
-                    <comment>Logs Exported to API successfully.</comment>
                     <frontend_model>Routee\WaymoreRoutee\Block\System\Config\ExportLogsAPI</frontend_model>
                 </field>
             </group>
