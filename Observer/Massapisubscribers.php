@@ -93,7 +93,7 @@ class Massapisubscribers implements ObserverInterface
         if ($callFrom == 'sendMass') {
             $subscriberCollection = $this->_subcriberCollectionFactory->create();
             $subscriberCollection->addStoreFilter($storeId);
-            if (!empty($subscriberCollection->getData())  && $page > 0){
+            if (!empty($subscriberCollection->getData()) && $page > 0) {
                 $subscriberCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }

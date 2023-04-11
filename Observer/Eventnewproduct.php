@@ -107,7 +107,7 @@ class Eventnewproduct implements ObserverInterface
             'data'      => [
                 'product_id'        => $product->getId(),
                 'name'              => $product->getName(),
-                'description'       => $product->getShortDescription(),
+                'description'       => $product->getDescription(),
                 'short_description' => $product->getShortDescription(),
                 'categories'        => $this->getProductCategories($product, $storeId),
                 'stock_quantity'    => $stockItem->getQty(),

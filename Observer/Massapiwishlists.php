@@ -9,7 +9,7 @@ use Magento\Framework\Event\Manager;
 use Magento\Store\Model\ScopeInterface;
 
 /**
- *Mass data export class for wishlist data
+ * Mass data export class for wishlist data
  */
 class Massapiwishlists implements ObserverInterface
 {
@@ -101,7 +101,7 @@ class Massapiwishlists implements ObserverInterface
 
         if ($callFrom == 'sendMass') {
             $wishlistCollection->addStoreFilter($storeId);
-            if (!empty($wishlistCollection->getData())  && $page > 0){
+            if (!empty($wishlistCollection->getData()) && $page > 0) {
                 $wishlistCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }

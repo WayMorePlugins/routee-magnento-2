@@ -17,8 +17,7 @@ class AdminLoginSucceeded implements ObserverInterface
      */
     public function __construct(
         ResourceConnection $resourceConnection
-    )
-    {
+    ) {
         $this->resourceConnection = $resourceConnection;
     }
 

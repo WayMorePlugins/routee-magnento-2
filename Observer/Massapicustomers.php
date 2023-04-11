@@ -111,7 +111,7 @@ class Massapicustomers implements ObserverInterface
             $customerCollection = $customerCollection
                 ->addAttributeToSelect("*")
                 ->addAttributeToFilter("website_id", ["eq" => $websiteId]);
-            if (!empty($customerCollection->getData()) && $page > 0){
+            if (!empty($customerCollection->getData()) && $page > 0) {
                 $customerCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }

@@ -144,7 +144,7 @@ class Massapiproducts implements ObserverInterface
             $productCollection = $productCollection
                 ->addAttributeToSelect("*")
                 ->addWebsiteFilter($websiteId);
-            if (!empty($productCollection->getData()) && $page > 0){
+            if (!empty($productCollection->getData()) && $page > 0) {
                 $productCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }
@@ -207,7 +207,7 @@ class Massapiproducts implements ObserverInterface
         try {
             $stockItem = $this->_stockItemRepository->get($product->getId());
             $qty = $stockItem->getQty();
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $qty = 0;
         }
         return [

@@ -69,8 +69,7 @@ class ExportLogs extends Action
         ResourceConnection $resourceConnection,
         Data $helper,
         StoreManagerInterface $storeManager
-    )
-    {
+    ) {
         $this->_saveConfig = $configWriter;
         $this->resultFactory = $response;
         $this->cacheTypeList = $cacheTypeList;
@@ -90,7 +89,7 @@ class ExportLogs extends Action
         if ($this->getRequest()->isAjax()) {
             $GET = $this->getRequest()->getParams();
             $result = [];
-            switch ($GET['method']){
+            switch ($GET['method']) {
                 case 'csv':
                     $result = $this->handleLogsCsv($GET);
                     break;
@@ -136,7 +135,7 @@ class ExportLogs extends Action
 
             foreach ($logs as $key => $log) {
                 $ids[] = $log['id'];
-                $postArr[] =  array(
+                $postArr[] =  [
                     'siteUrl' => $log['store_url'],
                     'uuid' => $this->helper->getUuid(),
                     'event_name' => $this->eventName($log['event_type']),
@@ -144,7 +143,7 @@ class ExportLogs extends Action
                     'log_data' => $log['log_data'],
                     'created_at' => $log['created_at'],
                     'platform' => "Magento2"
-                );
+                ];
             }
 
             $responseArr = $this->helper->curl($apiUrl, $postArr, 'masslogs', 'yes');
@@ -166,7 +165,8 @@ class ExportLogs extends Action
      * @param $eventType
      * @return string
      */
-    public function eventName($eventType) {
+    public function eventName($eventType)
+    {
         $name = '';
 
         switch ($eventType) {
@@ -189,12 +189,13 @@ class ExportLogs extends Action
      * @param $ids
      * @return void
      */
-    public function routeeUpdateLogs($code, $ids) {
+    public function routeeUpdateLogs($code, $ids)
+    {
         if ($code == 200) {
             $connection = $this->resourceConnection->getConnection();
             // get table name
             $logs_table = $this->resourceConnection->getTableName('store_events_logs');
-            $query = "UPDATE $logs_table SET is_exported=1 WHERE is_exported=0 AND id IN (".implode(',',$ids).")";
+            $query = "UPDATE $logs_table SET is_exported=1 WHERE is_exported=0 AND id IN (".implode(',', $ids).")";
             return $connection->query($query);
         }
     }
