@@ -3,13 +3,15 @@ namespace Routee\WaymoreRoutee\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
-use Magento\Wishlist\Model\ResourceModel\Item\CollectionFactory;
+use Magento\Wishlist\Model\ResourceModel\Wishlist\CollectionFactory;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\Event\Manager;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Wishlist\Model\Wishlist;
+use Magento\Framework\App\ResourceConnection;
 
 /**
- * Mass data export class for wishlist data
+ *Mass data export class for wishlist data
  */
 class Massapiwishlists implements ObserverInterface
 {
@@ -32,6 +34,10 @@ class Massapiwishlists implements ObserverInterface
      * @var int
      */
     private $limit;
+    /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
 
     /**
      * @param Data $helper
@@ -41,11 +47,13 @@ class Massapiwishlists implements ObserverInterface
     public function __construct(
         Data $helper,
         Manager $eventManager,
-        CollectionFactory $wishlistCollectionFactory
+        Wishlist $wishlistCollectionFactory,
+		ResourceConnection $resourceConnection
     ) {
         $this->helper           = $helper;
         $this->_eventManager    = $eventManager;
         $this->_wishlistCollectionFactory = $wishlistCollectionFactory;
+		$this->resourceConnection = $resourceConnection;
         $this->limit = $this->helper->getRPRLimit();
     }
 
@@ -58,8 +66,9 @@ class Massapiwishlists implements ObserverInterface
     public function execute(EventObserver $observer)
     {
         $isEnabled = $this->helper->getIsEnabled();
+
         if ($isEnabled) {
-            $this->helper->eventExecutedLog('MassWishlist', 'mass data');
+            $this->helper->eventExecutedLog('MassWishlist', 'massdata');
 
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
@@ -94,15 +103,16 @@ class Massapiwishlists implements ObserverInterface
      */
     public function getWishlistCollection($callFrom, $storeId, $scopeId, $scope, $page)
     {
-        $wishlistCollection = $this->_wishlistCollectionFactory->create();
-        if ($scope == ScopeInterface::SCOPE_STORES) {
-            $wishlistCollection = $wishlistCollection->addStoreFilter($scopeId);
-        }
-
-        if ($callFrom == 'sendMass') {
-            $wishlistCollection->addStoreFilter($storeId);
-            if (!empty($wishlistCollection->getData()) && $page > 0) {
-                $wishlistCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
+        $wishlistCollection = [];
+		$wishlistCollectionObject = $this->_wishlistCollectionFactory->getCollection();
+        $wishlistCount = count($wishlistCollectionObject);
+        $minLimit = $this->limit * $page;
+        if ($wishlistCount > 0 ){
+            if ( $page = 1 || ($page > 1 && ( $minLimit <= $wishlistCount ) ) ) {
+                $wishlistCollection = $wishlistCollectionObject->setOrder(
+                    'wishlist_id',
+                    'asc'
+                )->setPageSize( $this->limit )->setCurPage($page)->getData();
             }
         }
 
@@ -140,25 +150,26 @@ class Massapiwishlists implements ObserverInterface
      */
     public function massApiWishlistAction($uuid, $callFrom, $storeId, $scopeId, $scope, $page = 0)
     {
-        $apiUrl     = $this->helper->getApiurl('massData');
+        $apiUrl  = $this->helper->getApiurl('massData');
         $wishlistCollection = $this->getWishlistCollection($callFrom, $storeId, $scopeId, $scope, $page);
 
-        $this->helper->eventGrabDataLog('MassWishlist', count($wishlistCollection), 'mass data');
+        $this->helper->eventGrabDataLog('MassWishlist', count($wishlistCollection), 'massdata');
 
-        if (!empty($wishlistCollection) && count($wishlistCollection)>0) {
+
+        if (!empty($wishlistCollection) && count($wishlistCollection) > 0) {
             $i = 0;
             $mass_data = $this->getMassData($uuid);
             foreach ($wishlistCollection as $wishlist) {
+
                 $mass_data['data'][0]['object'][$i] = [
-                    'customer_id' => $wishlist->getCustomerId(),
-                    'product_id'  => $wishlist->getProductId()
+                    'customer_id' => $wishlist['customer_id'],
+                    'product_id'  => $this->getWishlistProductIds($wishlist['wishlist_id'],)
                 ];
                 $i++;
             }
-
-            $this->helper->eventPayloadDataLog('MassWishlist', $mass_data, 'mass data');
-
+            $this->helper->eventPayloadDataLog('MassWishlist', count($mass_data['data'][0]['object']), 'massdata');
             $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
+
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {
@@ -170,4 +181,27 @@ class Massapiwishlists implements ObserverInterface
         }
         return $result;
     }
+	
+    /**
+     * Wishlist get Mass Products
+     *
+     * @param int $wishlistId
+     * @return array
+     */
+	public function getWishlistProductIds($wishlistId)
+	{
+		$tableName = $this->resourceConnection->getTableName('wishlist_item');
+        $select = $this->resourceConnection->getConnection()
+            ->select()
+            ->from($tableName, 'product_id')
+			->where("wishlist_id = $wishlistId");
+        $wishlistItems = $this->resourceConnection->getConnection()->fetchAll($select);
+
+		
+		$pIds = [];
+		foreach ($wishlistItems as $item) {
+			$pIds[] = $item['product_id'];
+		}
+		return $pIds;
+	}
 }

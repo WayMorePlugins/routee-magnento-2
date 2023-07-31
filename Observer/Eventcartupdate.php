@@ -60,16 +60,18 @@ class Eventcartupdate implements ObserverInterface
     public function getRequestParam($observer)
     {
         $cart       = $observer->getCart();
+
         $allitems   =  $cart->getQuote()->getAllVisibleItems();
         $storeId    = $cart->getQuote()->getStoreId();
         $uuid       = $this->helper->getUuid($storeId);
-        $customerId = $cart->getQuote()->getCustomerId() > 1 ? $cart->getQuote()->getCustomerId() : 0;
+
+        $customerId = $cart->getQuote()->getCustomerId() ??  0;
 
         $data = $cartDetails = $itemOptions = [];
 
         $data['uuid'] = $uuid;
         $data['event'] = 'CartUpdate';
-        $data['data'][]['customer_id'] = $customerId;
+        $data['data'][0]['customer_id'] = $customerId;
         foreach ($allitems as $item) {
             foreach ($item->getOptions() as $option) {
                 $itemOptions[] = $option['option_id'];
@@ -77,9 +79,9 @@ class Eventcartupdate implements ObserverInterface
             $cartDetails['product_id'] = $item->getProductId();
             $cartDetails['option_id'] = implode(",", $itemOptions);
             $cartDetails['quantity'] = $item->getQty();
-            $data['data'][]['cart_products'][] = $cartDetails;
+            $data['data'][0]['cart_products'][] = $cartDetails;
         }
-        $data['data'][]['cart_url'] = $this->_urlInterface->getUrl('checkout/cart');
+        $data['data'][0]['cart_url'] = $this->_urlInterface->getUrl('checkout/cart');
 
         $this->helper->eventGrabDataLog('CartUpdate', $data, 'events');
 

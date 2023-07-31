@@ -1,6 +1,8 @@
 <?php
 namespace Routee\WaymoreRoutee\Helper;
 
+use Magento\Framework\App\Cache\Frontend\Pool;
+use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\Http\Context as HttpContext;
@@ -51,6 +53,14 @@ class Data extends AbstractHelper
      * Mass data export records per request limit
      */
     const RPR_LIMIT = 100;
+    /**
+     * @var TypeListInterface
+     */
+    private $_cacheTypeList;
+    /**
+     * @var Pool
+     */
+    private $_cacheFrontendPool;
 
     /**
      * @param Context $context
@@ -60,6 +70,8 @@ class Data extends AbstractHelper
      * @param CountryFactory $countryFactory
      * @param StoreManagerInterface $storeManager
      * @param ResourceConnection $resourceConnection
+     * @param TypeListInterface $cacheTypeList
+     * @param Pool $cacheFrontendPool
      */
     public function __construct(
         Context $context,
@@ -68,7 +80,10 @@ class Data extends AbstractHelper
         Curl $curl,
         CountryFactory $countryFactory,
         StoreManagerInterface $storeManager,
-        ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection,
+        TypeListInterface $cacheTypeList,
+        Pool $cacheFrontendPool
+
     ) {
         parent::__construct($context);
         $this->httpContext = $httpContext;
@@ -77,6 +92,8 @@ class Data extends AbstractHelper
         $this->_countryFactory = $countryFactory;
         $this->_storeManager = $storeManager;
         $this->resourceConnection = $resourceConnection;
+        $this->_cacheTypeList = $cacheTypeList;
+        $this->_cacheFrontendPool = $cacheFrontendPool;
     }
 
     /**
@@ -194,26 +211,30 @@ class Data extends AbstractHelper
      * @param $isLog
      * @return mixed
      */
-    public function curl($apiUrl, $params, $mode, $isLog = '')
+    public function curl($apiUrl, $params, $mode, $isLog='')
     {
         $event = $params['event'] ?? '';
-        try {
-            $this->_curl->post($apiUrl, json_encode($params));
+
+        try{
             $this->_curl->addHeader("Content-Type", "application/json");
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
-            //response will contain the output in form of JSON string
+            $this->_curl->post($apiUrl, json_encode($params));
+
             $response = $this->_curl->getBody();
+
             $code = $this->_curl->getStatus();
 
-            if ($isLog != 'yes') {
-                $this->writeLog($mode, $event, '');
+            if($isLog != 'yes') {
+                $this->writeLog( $mode, $event, '' );
             } else {
                 return ['response' => $response, 'code' => $code];
             }
 
             return json_decode($response, true);
-        } catch (\Exception $e) {
-            $this->writeLog($mode, $event, $e);
+        }
+        catch (\Exception $e) {
+            $this->writeLog( $mode, $event, $e );
+            return ['message' => $e->getMessage(), 'code' => $e->getCode()];
         }
     }
 
@@ -223,16 +244,15 @@ class Data extends AbstractHelper
      * @param $exception
      * @return void
      */
-    private function writeLog($mode, $event, $exception)
-    {
+    private function writeLog( $mode, $event, $exception ) {
         $code = empty($exception) ? '200' : $exception->getCode();
         $msg = empty($exception) ? 'HTTP executed successfully.' : $exception->getMessage();
-        $message = [
+        $message = array(
             'mode' => $mode,
             'event' => $event,
             'code' => $code,
             'exception_message' => $msg
-        ];
+        );
         //Writing http call logs
         $this->logsInitated($mode, $code, $message);
     }
@@ -333,8 +353,7 @@ class Data extends AbstractHelper
      * @param $code
      * @param $logdata
      */
-    public function logsInitated($mode, $code, $logdata)
-    {
+    public function logsInitated($mode, $code, $logdata) {
         $this->saveLogs($mode, $code, $logdata);
         $this->sendErrorLog($code, $logdata);
     }
@@ -342,8 +361,7 @@ class Data extends AbstractHelper
     /**
      * @return void
      */
-    public function saveLogs($mode, $code, $logdata)
-    {
+    public function saveLogs($mode, $code, $logdata) {
         $connection = $this->resourceConnection->getConnection();
         // get table name
         $table = $this->resourceConnection->getTableName('store_events_logs');
@@ -361,13 +379,12 @@ class Data extends AbstractHelper
     /**
      * @return void
      */
-    public function sendErrorLog($code, $logdata)
-    {
+    public function sendErrorLog($code, $logdata) {
 
-        if ($code != 200) {
+        if($code != 200) {
             $apiUrl = $this->getApiurl('logs');
 
-            $postArr = [
+            $postArr = array(
                 'siteUrl' => $this->_storeManager->getStore()->getUrl(),
                 'uuid' => $this->getUuid(),
                 'event_name' => !empty($logdata['event']) ? $logdata['event'] : $logdata['mode'],
@@ -375,7 +392,7 @@ class Data extends AbstractHelper
                 'log_data' => $logdata,
                 'created_at' => gmdate('d-m-Y H:i:s'),
                 'platform' => "Magento2"
-            ];
+            );
 
             $this->_curl->post($apiUrl, json_encode($postArr));
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
@@ -387,19 +404,18 @@ class Data extends AbstractHelper
     /**
      * @return int
      */
-    public function eventType($mode)
-    {
+    public function eventType($mode) {
         $type = 0;
 
         switch ($mode) {
             case "auth":
                 $type = 1;
                 break;
-            case "massData":
-                $type = 3;
-                break;
             case "events":
                 $type = 2;
+                break;
+            case "massdata":
+                $type = 3;
                 break;
         }
 
@@ -411,13 +427,12 @@ class Data extends AbstractHelper
      * @param  $method
      * @return void
      */
-    public function eventExecutedLog($func, $method)
-    {
-        $payload = [
+    public function eventExecutedLog($func, $method) {
+        $payload = array(
             'function' => $func,
             'method' => $method,
             'desc' => 'Hook function executed.'
-        ];
+        );
         $this->saveLogs($method, 200, $payload);
     }
 
@@ -427,14 +442,13 @@ class Data extends AbstractHelper
      * @param  $method
      * @return void
      */
-    public function eventGrabDataLog($func, $data, $method)
-    {
-        $payload = [
+    public function eventGrabDataLog($func, $data, $method) {
+        $payload = array(
             'function' => $func,
             'method' => $method,
             'postdata' => $data,
             'desc' => 'Event data grabbed.'
-        ];
+        );
         $this->saveLogs($method, 200, $payload);
     }
 
@@ -444,14 +458,24 @@ class Data extends AbstractHelper
      * @param  $method
      * @return void
      */
-    public function eventPayloadDataLog($func, $data, $method)
-    {
-        $payload = [
+    public function eventPayloadDataLog($func, $data, $method) {
+        $payload = array(
             'function' => $func,
             'method' => $method,
             'api_payload' => $data,
             'desc' => 'Event API payload is prepared.'
-        ];
+        );
         $this->saveLogs($method, 200, $payload);
+    }
+
+    public function clearCache()
+    {
+        $types = array('config','layout','block_html','collections','reflection','db_ddl','eav','config_integration','config_integration_api','full_page','translate','config_webservice');
+        foreach ($types as $type) {
+            $this->_cacheTypeList->cleanType($type);
+        }
+        foreach ($this->_cacheFrontendPool as $cacheFrontend) {
+            $cacheFrontend->getBackend()->clean();
+        }
     }
 }

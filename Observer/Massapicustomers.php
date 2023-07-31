@@ -44,7 +44,7 @@ class Massapicustomers implements ObserverInterface
      * @param Data $helper
      * @param StoreManagerInterface $storeManager
      * @param Manager $eventManager
-     * @param CustomerFactory $customerFactory
+     * @param CollectionFactory $customerFactory
      */
     public function __construct(
         Data $helper,
@@ -70,7 +70,7 @@ class Massapicustomers implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
-            $this->helper->eventExecutedLog('MassCustomer', 'mass data');
+            $this->helper->eventExecutedLog('MassCustomer', 'massdata');
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
             $scope      = $observer->getData('scope');
@@ -92,8 +92,6 @@ class Massapicustomers implements ObserverInterface
         $websiteId  = $scopeId;
         if ($scope == ScopeInterface::SCOPE_STORES) {
             $websiteId = $this->_storeManager->getStore($scopeId)->getWebsiteId();
-        } elseif ($scope == ScopeInterface::SCOPE_WEBSITES) {
-            $websiteId = $scopeId;
         }
         return $websiteId;
     }
@@ -111,7 +109,7 @@ class Massapicustomers implements ObserverInterface
             $customerCollection = $customerCollection
                 ->addAttributeToSelect("*")
                 ->addAttributeToFilter("website_id", ["eq" => $websiteId]);
-            if (!empty($customerCollection->getData()) && $page > 0) {
+            if (!empty($customerCollection->getData()) && $page > 0){
                 $customerCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }
@@ -219,7 +217,7 @@ class Massapicustomers implements ObserverInterface
         $apiUrl     = $this->helper->getApiurl('massData');
         $customerCollection = $this->getCustomerCollection($websiteId, $page);
 
-        $this->helper->eventGrabDataLog('MassCustomer', count($customerCollection), 'mass data');
+        $this->helper->eventGrabDataLog('MassCustomer', count($customerCollection), 'massdata');
 
         if (!empty($customerCollection) && count($customerCollection) > 0) {
             $i = 0;
@@ -232,7 +230,7 @@ class Massapicustomers implements ObserverInterface
                 $i++;
             }
 
-            $this->helper->eventPayloadDataLog('MassCustomer', $mass_data, 'mass data');
+            $this->helper->eventPayloadDataLog('MassCustomer', count($mass_data['data'][0]['object']), 'massdata');
 
             $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
             $result = ['reload' => 0];

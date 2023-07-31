@@ -5,7 +5,10 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Newsletter\Model\ResourceModel\Subscriber\CollectionFactory;
+use Magento\Newsletter\Model\Subscriber;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Newsletter\Model\SubscriberFactory;
 
 /**
  * Mass data export class for Newsletter subscribers data
@@ -20,23 +23,38 @@ class Massapisubscribers implements ObserverInterface
     /**
      * @var CollectionFactory
      */
-    protected $_subcriberCollectionFactory;
+    protected $_subscriberCollectionFactory;
 
     /**
      * @var int
      */
     private $limit;
 
+	/**
+     * @var SubscriberFactory
+     */
+    private $subscriberFactory;
+    /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
     /**
      * @param Data $helper
-     * @param CollectionFactory $subcriberCollectionFactory
+     * @param Subscriber $subcriberCollectionFactory
+     * @param ResourceConnection $resourceConnection
+     * @param SubscriberFactory $subscriberFactory
      */
     public function __construct(
         Data $helper,
-        CollectionFactory $subcriberCollectionFactory
+        Subscriber $subscriberCollectionFactory,
+		ResourceConnection $resourceConnection,
+		SubscriberFactory $subscriberFactory
     ) {
         $this->helper   = $helper;
-        $this->_subcriberCollectionFactory = $subcriberCollectionFactory;
+        $this->_subscriberCollectionFactory = $subscriberCollectionFactory;
+		$this->resourceConnection = $resourceConnection;
+		$this->subscriberFactory = $subscriberFactory;
         $this->limit = $this->helper->getRPRLimit();
     }
 
@@ -50,7 +68,7 @@ class Massapisubscribers implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
-            $this->helper->eventExecutedLog('MassSubscriber', 'mass data');
+            $this->helper->eventExecutedLog('MassSubscriber', 'massdata');
 
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
@@ -85,19 +103,13 @@ class Massapisubscribers implements ObserverInterface
      */
     public function getSubscriberCollection($callFrom, $storeId, $scopeId, $scope, $page)
     {
-        $subscriberCollection = $this->_subcriberCollectionFactory->create();
-        if ($scope == ScopeInterface::SCOPE_STORES) {
-            $subscriberCollection = $subscriberCollection->addStoreFilter($scopeId);
-        }
-
-        if ($callFrom == 'sendMass') {
-            $subscriberCollection = $this->_subcriberCollectionFactory->create();
-            $subscriberCollection->addStoreFilter($storeId);
-            if (!empty($subscriberCollection->getData()) && $page > 0) {
-                $subscriberCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
-            }
-        }
-        return $subscriberCollection;
+		$tableName = $this->resourceConnection->getTableName('newsletter_subscriber');
+        $select = $this->resourceConnection->getConnection()
+            ->select()
+            ->from($tableName, '*')
+            ->order('subscriber_id', 'asc')
+            ->limit($this->limit, ($page - 1) * $this->limit);
+        return $this->resourceConnection->getConnection()->fetchAll($select);
     }
 
     /**
@@ -160,20 +172,23 @@ class Massapisubscribers implements ObserverInterface
         $apiUrl     = $this->helper->getApiurl('massData');
         $subscriberCollection = $this->getSubscriberCollection($callFrom, $storeId, $scopeId, $scope, $page);
 
-        $this->helper->eventGrabDataLog('MassSubscriber', count($subscriberCollection), 'mass data');
+        $this->helper->eventGrabDataLog('MassSubscriber', count($subscriberCollection), 'massdata');
 
         if (!empty($subscriberCollection) && count($subscriberCollection)>0) {
             $i = 0;
             $mass_data = $this->getMassData($uuid);
             foreach ($subscriberCollection as $subscriber) {
+				$subscriber = $this->subscriberFactory->create()->loadByCustomerId((int)$subscriber['customer_id']);
+					
                 $subscriberInfo = $this->getSubscriberInfo($subscriber, $scopeId, $storeId, $callFrom);
                 $mass_data['data'][0]['object'][$i] = $subscriberInfo;
                 $i++;
             }
 
-            $this->helper->eventPayloadDataLog('MassSubscriber', $mass_data, 'mass data');
+            $this->helper->eventPayloadDataLog('MassSubscriber', count($mass_data['data'][0]['object']), 'massdata');
 
             $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
+			
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {

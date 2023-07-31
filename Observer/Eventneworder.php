@@ -136,8 +136,7 @@ class Eventneworder implements ObserverInterface
      * @param $item
      * @return int
      */
-    public function getSelectedOptions($item)
-    {
+    public function getSelectedOptions($item){
         $optId = 0;
         $options = $item->getProductOptions();
         if ($options) {

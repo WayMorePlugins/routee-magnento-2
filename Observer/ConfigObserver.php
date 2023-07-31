@@ -81,8 +81,9 @@ class ConfigObserver implements ObserverInterface
      */
     public function execute(EventObserver $observer)
     {
-        $this->helper->eventExecutedLog('Authentication', 'auth');
 
+        
+        $this->helper->eventExecutedLog('Authentication', 'auth');
         $this->storeId   = $this->_request->getParam('store', 0);
         $this->websiteId = $this->_request->getParam('website', 0);
         $this->setScope();
@@ -104,11 +105,14 @@ class ConfigObserver implements ObserverInterface
                 $params = $this->getRequestParam($postedDataFields, $usernameMain, $passwordMain);
 
                 if ($params["username"] != '' && $params["password"] != '') {
+
                     $this->helper->eventPayloadDataLog('Authentication', $params, 'auth');
+
                     $responseArr = $this->helper->curl($apiUrl, $params, 'auth');
                     
                     if (isset($responseArr['uuid'])) {
                         $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
+
                     } else {
                         $this->saveDefaultValues();
                         throw new AuthorizationException(__($responseArr['message']));

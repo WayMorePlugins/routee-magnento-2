@@ -54,7 +54,7 @@ class Massapiproducts implements ObserverInterface
     /**
      * @var StockItemRepository
      */
-    protected $StockItemRepository;
+    protected $_stockItemRepository;
 
     /**
      * @var int
@@ -124,8 +124,6 @@ class Massapiproducts implements ObserverInterface
         $websiteId  = $scopeId;
         if ($scope == ScopeInterface::SCOPE_STORES) {
             $websiteId = $this->_storeManager->getStore($scopeId)->getWebsiteId();
-        } elseif ($scope == ScopeInterface::SCOPE_WEBSITES) {
-            $websiteId = $scopeId;
         }
         return $websiteId;
     }
@@ -144,7 +142,7 @@ class Massapiproducts implements ObserverInterface
             $productCollection = $productCollection
                 ->addAttributeToSelect("*")
                 ->addWebsiteFilter($websiteId);
-            if (!empty($productCollection->getData()) && $page > 0) {
+            if (!empty($productCollection->getData()) && $page > 0){
                 $productCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
             }
         }
@@ -207,7 +205,7 @@ class Massapiproducts implements ObserverInterface
         try {
             $stockItem = $this->_stockItemRepository->get($product->getId());
             $qty = $stockItem->getQty();
-        } catch (\Exception $exception) {
+        } catch (\Exception $exception){
             $qty = 0;
         }
         return [
@@ -257,7 +255,7 @@ class Massapiproducts implements ObserverInterface
         $apiUrl     = $this->helper->getApiurl('massData');
         $productCollection = $this->getProductCollection($websiteId, $page);
 
-        $this->helper->eventGrabDataLog('MassProduct', count($productCollection), 'mass data');
+        $this->helper->eventGrabDataLog('MassProduct', count($productCollection), 'massdata');
 
         if (!empty($productCollection) && count($productCollection)>0) {
             $i = 0;
@@ -279,9 +277,9 @@ class Massapiproducts implements ObserverInterface
                 $i++;
             }
 
-            $this->helper->eventPayloadDataLog('MassProduct', $mass_data, 'mass data');
+            $this->helper->eventPayloadDataLog('MassProduct', count($mass_data['data'][0]['object']), 'massdata');
 
-            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
+            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massdata');
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {

@@ -7,6 +7,7 @@ use Magento\Framework\App\Config\Storage\WriterInterface;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Sales\Model\Order;
 
 /**
  * Mass data export class for orders data
@@ -36,12 +37,12 @@ class Massapiorders implements ObserverInterface
     /**
      * @param WriterInterface $configWriter
      * @param Data $helper
-     * @param CollectionFactory $orderCollectionFactory
+     * @param Order $orderCollectionFactory
      */
     public function __construct(
         WriterInterface $configWriter,
         Data $helper,
-        CollectionFactory $orderCollectionFactory
+        Order $orderCollectionFactory
     ) {
         $this->configWriter             = $configWriter;
         $this->helper                   = $helper;
@@ -59,7 +60,7 @@ class Massapiorders implements ObserverInterface
     {
         $isEnabled = $this->helper->getIsEnabled();
         if ($isEnabled) {
-            $this->helper->eventExecutedLog('MassOrder', 'mass data');
+            $this->helper->eventExecutedLog('MassOrder', 'massdata');
 
             $uuid       = $observer->getData('uuid');
             $scopeId    = $observer->getData('scopeId');
@@ -80,15 +81,12 @@ class Massapiorders implements ObserverInterface
      */
     public function getorderCollection($callFrom, $scope, $scopeId, $storeId, $page)
     {
-        $orderCollection = $this->_orderCollectionFactory->create()->addAttributeToSelect('*');
-        if ($scope == ScopeInterface::SCOPE_STORES && $callFrom == 'eventMass') {
-            $orderCollection = $orderCollection->addStoreFilter($scopeId);
-        } else {
-            $orderCollection = $orderCollection->addAttributeToFilter("store_id", ["eq" => $storeId]);
-            if (!empty($orderCollection->getData()) && $page > 0) {
-                $orderCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
-            }
-        }
+        $orderCollection = $this->_orderCollectionFactory->getCollection();
+		$orderCollection->setOrder(
+                'entity_id',
+                'asc'
+            )->setPageSize($this->limit)->setCurPage($page);
+		
         return $orderCollection;
     }
 
@@ -146,7 +144,7 @@ class Massapiorders implements ObserverInterface
         $uuid = $requestData['uuid'];
         $storeId = $requestData['store_id'];
         $page = $requestData['cycle_count'];
-        return $this->massApiOrderAction('eventRequest', $uuid, 0, 0, $storeId, $page);
+        return $this->massApiOrderAction('eventRequest', $uuid, 0, 0, $storeId, $page );
     }
 
     /**
@@ -164,7 +162,7 @@ class Massapiorders implements ObserverInterface
         $apiUrl     = $this->helper->getApiurl('massData');
         $orderCollection = $this->getorderCollection($callFrom, $scope, $scopeId, $storeId, $page);
 
-        $this->helper->eventGrabDataLog('MassOrder', count($orderCollection), 'mass data');
+        $this->helper->eventGrabDataLog('MassOrder', count($orderCollection), 'massdata');
 
         if (!empty($orderCollection) && count($orderCollection) > 0) {
             $i = 0;
@@ -182,9 +180,10 @@ class Massapiorders implements ObserverInterface
                 $i++;
             }
 
-            $this->helper->eventPayloadDataLog('MassOrder', $mass_data, 'mass data');
+            $this->helper->eventPayloadDataLog('MassOrder', count($mass_data['data'][0]['object']), 'massdata');
 
-            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
+            $responseArr = $this->helper->curl($apiUrl, $mass_data, 'data');
+
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {

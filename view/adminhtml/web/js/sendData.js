@@ -6,7 +6,7 @@ requirejs(['jquery'], function($){
     $('.send_mass_data').on("click", function (e) {
         $('.send_mass_data').attr("disabled", "true");
         action = $(this).attr("data-action");
-        make_ajax(url, {action : action, cycle_count : count});
+        make_ajax(url, {action : action, cycle_count : count, form_key: window.FORM_KEY});
     })
 
     $("#routee-log-export-api").on("click", function (e) {
@@ -47,9 +47,11 @@ requirejs(['jquery'], function($){
         } else if (data.reload === 0){
             let req = {
                 action : action,
-                cycle_count : count
+                cycle_count : count,
+				form_key: window.FORM_KEY
             };
-            make_ajax(req);
+
+            make_ajax(url, req);
         }
     }
 });
