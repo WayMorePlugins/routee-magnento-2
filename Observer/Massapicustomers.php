@@ -9,6 +9,8 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Event\Manager;
 use Magento\Customer\Model\ResourceModel\Customer\CollectionFactory;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Customer\Model\Customer;
 
 /**
  * Mass data export class for customers data
@@ -41,22 +43,38 @@ class Massapicustomers implements ObserverInterface
     private $limit;
 
     /**
+     * @var ResourceConnection
+     */
+    protected $resourceConnection;
+
+    /**
+     * @var Customer
+     */
+    protected $customer;
+
+    /**
      * @param Data $helper
      * @param StoreManagerInterface $storeManager
      * @param Manager $eventManager
      * @param CollectionFactory $customerFactory
+     * @param ResourceConnection $resourceConnection
+     * @param Customer $customer
      */
     public function __construct(
         Data $helper,
         StoreManagerInterface $storeManager,
         Manager $eventManager,
-        CollectionFactory $customerFactory
+        CollectionFactory $customerFactory,
+        ResourceConnection $resourceConnection,
+        Customer $customer
     ) {
         $this->helper           = $helper;
         $this->_storeManager    = $storeManager;
         $this->_eventManager    = $eventManager;
         $this->_customerFactory = $customerFactory;
         $this->limit = $this->helper->getRPRLimit();
+        $this->resourceConnection           = $resourceConnection;
+        $this->customer = $customer;
     }
 
     /**
@@ -99,21 +117,20 @@ class Massapicustomers implements ObserverInterface
     /**
      * Get Customer Collection
      *
-     * @param int $websiteId
-     * @return Collection
+     * @param $page
+     * @return array
      */
-    public function getCustomerCollection($websiteId, $page)
+    public function getCustomerCollection($page)
     {
-        $customerCollection = $this->_customerFactory->create();
-        if ($websiteId > 0) {
-            $customerCollection = $customerCollection
-                ->addAttributeToSelect("*")
-                ->addAttributeToFilter("website_id", ["eq" => $websiteId]);
-            if (!empty($customerCollection->getData()) && $page > 0){
-                $customerCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
-            }
-        }
-        return $customerCollection;
+        $start = ($this->limit * $page) - $this->limit;
+
+        $tableName = $this->resourceConnection->getTableName('customer_entity');
+        $select = $this->resourceConnection->getConnection()
+            ->select()
+            ->from($tableName, 'email')
+            ->order('entity_id', 'asc')
+            ->limit($this->limit, $start);
+        return $this->resourceConnection->getConnection()->fetchAll($select);
     }
 
     /**
@@ -215,7 +232,7 @@ class Massapicustomers implements ObserverInterface
     public function massApiCutomerAction($callFrom, $uuid, $websiteId, $scopeId, $scope, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $customerCollection = $this->getCustomerCollection($websiteId, $page);
+        $customerCollection = $this->getCustomerCollection($page);
 
         $this->helper->eventGrabDataLog('MassCustomer', count($customerCollection), 'massdata');
 
@@ -223,7 +240,8 @@ class Massapicustomers implements ObserverInterface
             $i = 0;
             $mass_data   = $this->getMassData($uuid);
 
-            foreach ($customerCollection as $customer) {
+            foreach ($customerCollection as $customerEntity) {
+                $customer = $this->getCustomerObject($customerEntity, $websiteId);
                 $customerInfo = $this->getCustomerInfo($customer);
                 $mass_data['data'][0]['object'][$i] = $customerInfo;
 
@@ -243,5 +261,16 @@ class Massapicustomers implements ObserverInterface
             $result = ['reload' => 1];
         }
         return $result;
+    }
+
+    /**
+     * @param $customerEntity
+     * @param $websiteId
+     * @return Customer
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    public function getCustomerObject($customerEntity, $websiteId)
+    {
+        return $this->customer->setWebsiteId($websiteId)->loadByEmail($customerEntity['email']);
     }
 }

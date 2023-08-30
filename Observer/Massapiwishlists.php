@@ -103,20 +103,15 @@ class Massapiwishlists implements ObserverInterface
      */
     public function getWishlistCollection($callFrom, $storeId, $scopeId, $scope, $page)
     {
-        $wishlistCollection = [];
-		$wishlistCollectionObject = $this->_wishlistCollectionFactory->getCollection();
-        $wishlistCount = count($wishlistCollectionObject);
-        $minLimit = $this->limit * $page;
-        if ($wishlistCount > 0 ){
-            if ( $page = 1 || ($page > 1 && ( $minLimit <= $wishlistCount ) ) ) {
-                $wishlistCollection = $wishlistCollectionObject->setOrder(
-                    'wishlist_id',
-                    'asc'
-                )->setPageSize( $this->limit )->setCurPage($page)->getData();
-            }
-        }
+        $start = ($this->limit * $page) - $this->limit;
 
-        return $wishlistCollection;
+        $tableName = $this->resourceConnection->getTableName('wishlist');
+        $select = $this->resourceConnection->getConnection()
+            ->select()
+            ->from($tableName, '*')
+            ->order('wishlist_id', 'asc')
+            ->limit($this->limit, $start);
+        return $this->resourceConnection->getConnection()->fetchAll($select);
     }
 
     /**
@@ -155,7 +150,6 @@ class Massapiwishlists implements ObserverInterface
 
         $this->helper->eventGrabDataLog('MassWishlist', count($wishlistCollection), 'massdata');
 
-
         if (!empty($wishlistCollection) && count($wishlistCollection) > 0) {
             $i = 0;
             $mass_data = $this->getMassData($uuid);
@@ -163,7 +157,7 @@ class Massapiwishlists implements ObserverInterface
 
                 $mass_data['data'][0]['object'][$i] = [
                     'customer_id' => $wishlist['customer_id'],
-                    'product_id'  => $this->getWishlistProductIds($wishlist['wishlist_id'],)
+                    'product_id'  => $this->getWishlistProductIds($wishlist['wishlist_id'])
                 ];
                 $i++;
             }
@@ -181,7 +175,7 @@ class Massapiwishlists implements ObserverInterface
         }
         return $result;
     }
-	
+
     /**
      * Wishlist get Mass Products
      *
@@ -197,7 +191,7 @@ class Massapiwishlists implements ObserverInterface
 			->where("wishlist_id = $wishlistId");
         $wishlistItems = $this->resourceConnection->getConnection()->fetchAll($select);
 
-		
+
 		$pIds = [];
 		foreach ($wishlistItems as $item) {
 			$pIds[] = $item['product_id'];

@@ -15,6 +15,8 @@ use Magento\Catalog\Model\Product\Option;
 use Magento\CatalogInventory\Model\Stock\StockItemRepository;
 use Magento\Framework\UrlInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Catalog\Model\ProductRepository;
 
 /**
  * Mass Products export class
@@ -62,6 +64,16 @@ class Massapiproducts implements ObserverInterface
     private $limit;
 
     /**
+     * @var ResourceConnection
+     */
+    protected $resourceConnection;
+
+    /**
+     * @var ProductRepository
+     */
+    protected $_productRepository;
+
+    /**
      * @param Data $helper
      * @param StoreManagerInterface $storeManager
      * @param Manager $eventManager
@@ -69,6 +81,8 @@ class Massapiproducts implements ObserverInterface
      * @param CategoryRepositoryInterface $categoryRepository
      * @param Option $productOptions
      * @param StockItemRepository $stockItemRepository
+     * @param ResourceConnection $resourceConnection
+     * @param ProductRepository $productRepository
      */
     public function __construct(
         Data $helper,
@@ -77,7 +91,9 @@ class Massapiproducts implements ObserverInterface
         CollectionFactory $productCollectionFactory,
         CategoryRepositoryInterface $categoryRepository,
         Option $productOptions,
-        StockItemRepository $stockItemRepository
+        StockItemRepository $stockItemRepository,
+        ResourceConnection $resourceConnection,
+        ProductRepository $productRepository
     ) {
         $this->helper                       = $helper;
         $this->_storeManager                = $storeManager;
@@ -87,6 +103,8 @@ class Massapiproducts implements ObserverInterface
         $this->productOptions               = $productOptions;
         $this->_stockItemRepository         = $stockItemRepository;
         $this->limit = $this->helper->getRPRLimit();
+        $this->resourceConnection           = $resourceConnection;
+        $this->_productRepository = $productRepository;
     }
 
     /**
@@ -131,22 +149,20 @@ class Massapiproducts implements ObserverInterface
     /**
      * Get Product collection
      *
-     * @param int $websiteId
-     * @return Collection
+     * @param $page
+     * @return array
      */
-    public function getProductCollection($websiteId, $page)
+    public function getProductCollection($page)
     {
-        $productCollection = $this->_productCollectionFactory->create();
+        $start = ($this->limit * $page) - $this->limit;
 
-        if ($websiteId > 0) {
-            $productCollection = $productCollection
-                ->addAttributeToSelect("*")
-                ->addWebsiteFilter($websiteId);
-            if (!empty($productCollection->getData()) && $page > 0){
-                $productCollection->addAttributeToSort('entity_id', 'asc')->setPageSize($this->limit)->setCurPage($page);
-            }
-        }
-        return $productCollection;
+        $tableName = $this->resourceConnection->getTableName('catalog_product_entity');
+        $select = $this->resourceConnection->getConnection()
+            ->select()
+            ->from($tableName, 'entity_id')
+            ->order('entity_id', 'asc')
+            ->limit($this->limit, $start);
+        return $this->resourceConnection->getConnection()->fetchAll($select);
     }
 
     /**
@@ -253,7 +269,7 @@ class Massapiproducts implements ObserverInterface
     public function massApiProductAction($callFrom, $uuid, $websiteId, $scopeId, $scope, $storeId, $page = 0)
     {
         $apiUrl     = $this->helper->getApiurl('massData');
-        $productCollection = $this->getProductCollection($websiteId, $page);
+        $productCollection = $this->getProductCollection($page);
 
         $this->helper->eventGrabDataLog('MassProduct', count($productCollection), 'massdata');
 
@@ -261,7 +277,8 @@ class Massapiproducts implements ObserverInterface
             $i = 0;
             $mass_data = $this->getMassProData($uuid);
 
-            foreach ($productCollection as $product) {
+            foreach ($productCollection as $productEntity) {
+                $product = $this->getProductById($productEntity);
                 $discount = $this->getProductDiscount($product);
                 $mass_data['data'][0]['object'][$i] = $this->getMassProInfo($product, $discount);
 
@@ -290,5 +307,15 @@ class Massapiproducts implements ObserverInterface
             $result = ['reload' => 1];
         }
         return $result;
+    }
+
+    /**
+     * @param $productEntity
+     * @return \Magento\Catalog\Api\Data\ProductInterface|mixed|null
+     * @throws NoSuchEntityException
+     */
+    public function getProductById($productEntity)
+    {
+        return $this->_productRepository->getById($productEntity['entity_id']);
     }
 }

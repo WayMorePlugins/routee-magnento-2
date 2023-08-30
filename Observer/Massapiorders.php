@@ -8,6 +8,8 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Sales\Model\Order;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Sales\Model\OrderFactory;
 
 /**
  * Mass data export class for orders data
@@ -35,18 +37,34 @@ class Massapiorders implements ObserverInterface
     private $limit;
 
     /**
+     * @var ResourceConnection
+     */
+    protected $resourceConnection;
+
+    /**
+     * @var OrderFactory
+     */
+    protected $orderFactory;
+
+    /**
      * @param WriterInterface $configWriter
      * @param Data $helper
      * @param Order $orderCollectionFactory
+     * @param ResourceConnection $resourceConnection
+     * @param OrderFactory $orderFactory
      */
     public function __construct(
         WriterInterface $configWriter,
         Data $helper,
-        Order $orderCollectionFactory
+        Order $orderCollectionFactory,
+        ResourceConnection $resourceConnection,
+        OrderFactory $orderFactory
     ) {
         $this->configWriter             = $configWriter;
         $this->helper                   = $helper;
         $this->_orderCollectionFactory  = $orderCollectionFactory;
+        $this->resourceConnection       = $resourceConnection;
+        $this->orderFactory = $orderFactory;
         $this->limit = $this->helper->getRPRLimit();
     }
 
@@ -81,13 +99,15 @@ class Massapiorders implements ObserverInterface
      */
     public function getorderCollection($callFrom, $scope, $scopeId, $storeId, $page)
     {
-        $orderCollection = $this->_orderCollectionFactory->getCollection();
-		$orderCollection->setOrder(
-                'entity_id',
-                'asc'
-            )->setPageSize($this->limit)->setCurPage($page);
-		
-        return $orderCollection;
+        $start = ($this->limit * $page) - $this->limit;
+
+        $tableName = $this->resourceConnection->getTableName('sales_order');
+        $select = $this->resourceConnection->getConnection()
+            ->select()
+            ->from($tableName, 'increment_id')
+            ->order('entity_id', 'asc')
+            ->limit($this->limit, $start);
+        return $this->resourceConnection->getConnection()->fetchAll($select);
     }
 
     /**
@@ -168,7 +188,8 @@ class Massapiorders implements ObserverInterface
             $i = 0;
             $mass_data = $this->getMassData($uuid);
 
-            foreach ($orderCollection as $order) {
+            foreach ($orderCollection as $orderEntity) {
+                $order = $this->getOrderObject($orderEntity);
                 $mass_data['data'][0]['object'][$i] = $this->getOrderDetials($order);
                 $orderItems = $order->getAllItems();
                 foreach ($orderItems as $item) {
@@ -194,5 +215,14 @@ class Massapiorders implements ObserverInterface
             $result = ['reload' => 1];
         }
         return $result;
+    }
+
+    /**
+     * @param $orderEntity
+     * @return Order
+     */
+    public function getOrderObject($orderEntity)
+    {
+        return $this->orderFactory->create()->loadByIncrementId($orderEntity['increment_id']);
     }
 }

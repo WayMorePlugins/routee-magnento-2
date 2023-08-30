@@ -24,6 +24,7 @@ requirejs(['jquery'], function($){
      * @return {void}
      */
     function make_ajax(apiurl, data) {
+        $('body').trigger('processStart');
         $.ajax({
             type: "POST",
             url: apiurl,
@@ -31,7 +32,9 @@ requirejs(['jquery'], function($){
             dataType: 'json',
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.log('error ' + textStatus);
+            $('body').trigger('processStop');
         }).done(function (data, textStatus, jqXHR) {
+            $('body').trigger('processStop');
             process_result(data)
         });
     }

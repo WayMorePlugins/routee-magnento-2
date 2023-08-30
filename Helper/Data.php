@@ -119,7 +119,7 @@ class Data extends AbstractHelper
                 $apiUrl = 'https://autoforms.routee.net/u001/log.php';
                 break;
         }
-        
+
         return $apiUrl;
     }
 
@@ -219,6 +219,8 @@ class Data extends AbstractHelper
             $this->_curl->addHeader("Content-Type", "application/json");
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->_curl->post($apiUrl, json_encode($params));
+
+            //response will contain the output in form of JSON string
 
             $response = $this->_curl->getBody();
 

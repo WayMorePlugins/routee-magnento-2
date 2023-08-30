@@ -103,12 +103,14 @@ class Massapisubscribers implements ObserverInterface
      */
     public function getSubscriberCollection($callFrom, $storeId, $scopeId, $scope, $page)
     {
+        $start = ($this->limit * $page) - $this->limit;
+
 		$tableName = $this->resourceConnection->getTableName('newsletter_subscriber');
         $select = $this->resourceConnection->getConnection()
             ->select()
             ->from($tableName, '*')
             ->order('subscriber_id', 'asc')
-            ->limit($this->limit, ($page - 1) * $this->limit);
+            ->limit($this->limit, $start);
         return $this->resourceConnection->getConnection()->fetchAll($select);
     }
 
@@ -179,7 +181,7 @@ class Massapisubscribers implements ObserverInterface
             $mass_data = $this->getMassData($uuid);
             foreach ($subscriberCollection as $subscriber) {
 				$subscriber = $this->subscriberFactory->create()->loadByCustomerId((int)$subscriber['customer_id']);
-					
+
                 $subscriberInfo = $this->getSubscriberInfo($subscriber, $scopeId, $storeId, $callFrom);
                 $mass_data['data'][0]['object'][$i] = $subscriberInfo;
                 $i++;
@@ -188,7 +190,7 @@ class Massapisubscribers implements ObserverInterface
             $this->helper->eventPayloadDataLog('MassSubscriber', count($mass_data['data'][0]['object']), 'massdata');
 
             $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massData');
-			
+
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {
                 if ($i < $this->limit) {
