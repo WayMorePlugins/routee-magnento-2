@@ -82,7 +82,7 @@ class Eventwishlistremove implements ObserverInterface
             $storeId    = $this->_storeManager->getStore()->getId();
             $uuid       = $this->helper->getUuid($storeId);
             $customerId = $this->_customerSession->getCustomer()->getId();
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
             $data       = $this->getWishlistRemoveData($uuid, $customerId, $productId);
             $this->helper->eventGrabDataLog('WishlistDelete', $data, 'events');
 

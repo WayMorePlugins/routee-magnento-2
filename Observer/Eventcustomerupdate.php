@@ -53,7 +53,7 @@ class Eventcustomerupdate implements ObserverInterface
 
             $customer       = $this->_customerSession->getCustomer()->getId();
             $storeId        = $observer->getEvent()->getStoreId();
-            $apiUrl         = $this->helper->getApiurl('events');
+            $apiUrl         = $this->helper->getApiurl('event');
             $customers      = $this->helper->getCustomerInfo($this->_customerSession->getCustomer());
             $addresses      = $this->_customerSession->getCustomer()->getAddresses();
 

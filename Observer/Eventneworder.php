@@ -55,7 +55,7 @@ class Eventneworder implements ObserverInterface
             $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
             $customerId = $order->getCustomerId();
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
             $checkSubscriber    = ($this->_subscriber->loadByEmail($order->getCustomerEmail()))?'true':'false';
 
             $orderDetails       = $this->getOrderDetails($order, $checkSubscriber);

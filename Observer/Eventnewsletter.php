@@ -58,7 +58,7 @@ class Eventnewsletter implements ObserverInterface
             $customerId     = $customerId < 1 ? 0 : $customerId;
             $isSubscribed   = $observer->getEvent()->getSubscriber()->getSubscriberStatus();
 
-            $apiUrl         = $this->helper->getApiurl('events');
+            $apiUrl         = $this->helper->getApiurl('event');
             $data           = $this->getNewsletterData($customerId, $uuid, $observer, $isSubscribed);
             $this->helper->eventGrabDataLog('Newsletter', $data, 'events');
 

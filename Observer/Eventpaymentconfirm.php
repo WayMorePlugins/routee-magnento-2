@@ -42,12 +42,12 @@ class Eventpaymentconfirm implements ObserverInterface
             $this->helper->eventExecutedLog('OrderPaymentConfirmed', 'events');
 
             $invoice    = $observer->getEvent()->getInvoice();
-            $storeId    = $invoice->getStoreId();
+            $order      = $invoice->getOrder();
+            $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
-            $order      = $this->orderRepository->get($invoice->getOrderId());
             $customerId = $order->getCustomerId();
-            $apiUrl     = $this->helper->getApiurl('events');
-            $data       = $this->getOrderPaymentData($customerId, $invoice, $uuid);
+            $apiUrl     = $this->helper->getApiurl('event');
+            $data       = $this->getOrderPaymentData($customerId, $order->getId(), $uuid);
             $this->helper->eventGrabDataLog('OrderPaymentConfirmed', $data, 'events');
 
             $params     = $this->helper->getRequestParam('OrderPaymentConfirmed', $data, $storeId);
@@ -61,18 +61,18 @@ class Eventpaymentconfirm implements ObserverInterface
      * Get Order Payment data
      *
      * @param int $customerId
-     * @param object $invoice
+     * @param int $orderId
      * @param string $uuid
      * @return array
      */
-    public function getOrderPaymentData($customerId, $invoice, $uuid)
+    public function getOrderPaymentData($customerId, $orderId, $uuid)
     {
         return [
             'uuid'  => $uuid,
             'event' => 'OrderPaymentConfirmed',
             'data'  => [
                 'customer_id'   => $customerId,
-                'order_id'      => $invoice->getOrderId()
+                'order_id'      => $orderId
             ]
         ];
     }

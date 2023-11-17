@@ -30,12 +30,13 @@ requirejs(['jquery'], function($){
             url: apiurl,
             data: data,
             dataType: 'json',
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            console.log('error ' + textStatus);
-            $('body').trigger('processStop');
+            timeout : 0,
         }).done(function (data, textStatus, jqXHR) {
             $('body').trigger('processStop');
             process_result(data)
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.log('error ' + textStatus);
+            $('body').trigger('processStop');
         });
     }
 

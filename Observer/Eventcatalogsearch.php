@@ -69,7 +69,7 @@ class Eventcatalogsearch implements ObserverInterface
         if ($isEnabled) {
             $this->helper->eventExecutedLog('Search', 'events');
 
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
             $params = $this->getRequestParam();
 
             $this->helper->eventPayloadDataLog('Search', $params, 'events');

@@ -37,7 +37,7 @@ class Eventorderstatuschange implements ObserverInterface
             $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
             $customerId = $order->getCustomerId();
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
 
             $data       = $this->getOrderData($customerId, $uuid, $order);
             $this->helper->eventGrabDataLog('OrderStatusUpdate', $data, 'events');

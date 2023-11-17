@@ -1,5 +1,5 @@
 <?php
- 
+
 namespace Routee\WaymoreRoutee\Block\System\Config;
 
 use Magento\Backend\Block\Template\Context;
@@ -87,7 +87,7 @@ class SendProductMassData extends Field
     public function getAjaxUrl()
     {
         $uuid = $this->getUUID();
-        return $this->getUrl('waymoreroutee/index/senddata').'?store_id='.$this->storeId.'&uuid='.$uuid;
+        return $this->getUrl('waymoreroutee/index/syncmassdata').'?store_id='.$this->storeId.'&uuid='.$uuid;
     }
 
     /**
@@ -102,7 +102,7 @@ class SendProductMassData extends Field
     /**
      * @return string
      */
-    public function dataSynced()
+    public function productSynced()
     {
         $path = "waymoreroutee/general/productmass";
         return !empty($this->helper->getConfigValue($path));

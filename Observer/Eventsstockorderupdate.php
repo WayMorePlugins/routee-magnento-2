@@ -36,7 +36,7 @@ class Eventsstockorderupdate implements ObserverInterface
             $order      = $observer->getEvent()->getOrder();
             $storeId    = $order->getStoreId();
             $uuid       = $this->helper->getUuid($storeId);
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
             $data       = $this->getOrderStockData($uuid, $order);
             $this->helper->eventGrabDataLog('ProductStockUpdate', $data, 'events');
 

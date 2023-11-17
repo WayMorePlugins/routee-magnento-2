@@ -84,9 +84,18 @@ class SendOrderMassData extends Field
     /**
      * @return string
      */
-    public function dataSynced()
+    public function orderSynced()
     {
         $path = "waymoreroutee/general/ordermass";
+        return !empty($this->helper->getConfigValue($path));
+    }
+	
+	/**
+     * @return string
+     */
+    public function customerSynced()
+    {
+        $path = "waymoreroutee/general/customermass";
         return !empty($this->helper->getConfigValue($path));
     }
 }

@@ -75,7 +75,7 @@ class Eventnewproduct implements ObserverInterface
 
             $storeId    = $this->_storeManager->getStore()->getId();
             $uuid       = $this->helper->getUuid($storeId);
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
             $data       = $this->getProductData($product, $uuid, $storeId, $eventName);
 
             $this->helper->eventGrabDataLog($eventName, $data, 'events');

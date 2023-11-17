@@ -35,7 +35,7 @@ class Eventcustomeradd implements ObserverInterface
 
             $customer   = $observer->getEvent()->getCustomer();
             $storeId    = $customer->getStoreId();
-            $apiUrl     = $this->helper->getApiurl('events');
+            $apiUrl     = $this->helper->getApiurl('event');
             $customers  = $this->helper->getCustomerInfo($customer);
             $addresses  = $customer->getAddresses();
 

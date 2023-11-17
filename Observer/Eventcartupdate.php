@@ -43,7 +43,7 @@ class Eventcartupdate implements ObserverInterface
         if ($isEnabled) {
             $this->helper->eventExecutedLog('CartUpdate', 'events');
 
-            $apiUrl = $this->helper->getApiurl('events');
+            $apiUrl = $this->helper->getApiurl('event');
             $params = $this->getRequestParam($observer);
 
             $this->helper->eventPayloadDataLog('CartUpdate', $params, 'events');

@@ -84,9 +84,18 @@ class SendWishlistMassData extends Field
     /**
      * @return string
      */
-    public function dataSynced()
+    public function wishlistSynced()
     {
         $path = "waymoreroutee/general/wishlistmass";
+        return !empty($this->helper->getConfigValue($path));
+    }
+	
+	 	/**
+     * @return string
+     */
+    public function subscriberSynced()
+    {
+        $path = "waymoreroutee/general/subscribermass";
         return !empty($this->helper->getConfigValue($path));
     }
 }

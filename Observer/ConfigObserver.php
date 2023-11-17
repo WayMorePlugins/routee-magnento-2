@@ -13,6 +13,7 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\Module\ResourceInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\ProductMetadataInterface;
+use Routee\WaymoreRoutee\Helper\RouteeUrls;
 
 class ConfigObserver implements ObserverInterface
 {
@@ -47,12 +48,18 @@ class ConfigObserver implements ObserverInterface
     protected $_productMetadata;
 
     /**
+     * @var RouteeUrls
+     */
+    protected $routeeUrl;
+
+    /**
      * @param WriterInterface $configWriter
      * @param RequestInterface $request
      * @param Data $helper
      * @param ResourceInterface $moduleResource
      * @param StoreManagerInterface $storeManager
      * @param ProductMetadataInterface $productMetadata
+     * @param RouteeUrls $routeeUrl
      */
     public function __construct(
         WriterInterface $configWriter,
@@ -60,7 +67,8 @@ class ConfigObserver implements ObserverInterface
         Data $helper,
         ResourceInterface $moduleResource,
         StoreManagerInterface $storeManager,
-        ProductMetadataInterface $productMetadata
+        ProductMetadataInterface $productMetadata,
+        RouteeUrls $routeeUrl
     ) {
         $this->configWriter       = $configWriter;
         $this->_request           = $request;
@@ -68,6 +76,7 @@ class ConfigObserver implements ObserverInterface
         $this->moduleResource     = $moduleResource;
         $this->_storeManager      = $storeManager;
         $this->_productMetadata   = $productMetadata;
+        $this->routeeUrl          = $routeeUrl;
     }
 
     /**
@@ -81,8 +90,6 @@ class ConfigObserver implements ObserverInterface
      */
     public function execute(EventObserver $observer)
     {
-
-        
         $this->helper->eventExecutedLog('Authentication', 'auth');
         $this->storeId   = $this->_request->getParam('store', 0);
         $this->websiteId = $this->_request->getParam('website', 0);
@@ -109,9 +116,12 @@ class ConfigObserver implements ObserverInterface
                     $this->helper->eventPayloadDataLog('Authentication', $params, 'auth');
 
                     $responseArr = $this->helper->curl($apiUrl, $params, 'auth');
-                    
+
                     if (isset($responseArr['uuid'])) {
+                        //save callback url to waymore
+                        $this->routeeUrl->saveCallbackUrl($responseArr['uuid']);
                         $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
+                        $this->helper->clearCache();
 
                     } else {
                         $this->saveDefaultValues();

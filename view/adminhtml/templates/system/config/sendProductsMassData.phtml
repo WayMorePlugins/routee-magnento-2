@@ -6,7 +6,7 @@
     </p>
 </div>
 
-<script type="text/javascript">
+<script>
     const url = "<?php echo $block->getAjaxUrl(); ?>";
     requirejs(['jquery'], function($) {
         let dtransferred = "<?php echo $block->completeDataSynced(); ?>";
@@ -27,8 +27,8 @@
 </script>
 
 
-<?php if ($block->dataSynced()): ?>
-        <script type="text/javascript">
+<?php if ($block->productSynced()): ?>
+        <script>
                 document.getElementById("product_mass_data").setAttribute("disabled", "true");
         </script>
 <?php else: ?>

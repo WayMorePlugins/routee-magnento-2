@@ -1,27 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    
-    <!-- Mass API Calls Start -->
+
 	<event name="admin_system_config_changed_section_waymoreroutee">
         <observer name="waymoreroutee_admin_system_config_changed_section_general" instance="Routee\WaymoreRoutee\Observer\ConfigObserver"/>
     </event>
-	<event name="waymoreroutee_uuid_generation_complete">
-        <observer name="waymoreroutee_massapicustomers_call" instance="Routee\WaymoreRoutee\Observer\Massapicustomers" />
-    </event>
-	<event name="waymoreroutee_massapicustomer_complete">
-        <observer name="waymoreroutee_massapisubscribers_call" instance="Routee\WaymoreRoutee\Observer\Massapisubscribers" />
-    </event>
-	<event name="waymoreroutee_massapisubscriber_complete">
-        <observer name="waymoreroutee_massapiproducts_call" instance="Routee\WaymoreRoutee\Observer\Massapiproducts" />
-    </event>
-	<event name="waymoreroutee_massapiproduct_complete">
-        <observer name="waymoreroutee_massapiwishlists_call" instance="Routee\WaymoreRoutee\Observer\Massapiwishlists" />
-    </event>
-	<event name="waymoreroutee_massapiwishlist_complete">
-        <observer name="waymoreroutee_massapiorders_call" instance="Routee\WaymoreRoutee\Observer\Massapiorders" />
-    </event>
-	<!-- Mass API Calls End -->
-	
+
 	<!-- Events API Calls Start -->
 	<event name="customer_register_success">
 		<observer name="waymoreroutee_eventsapicustomeradd_call" instance="Routee\WaymoreRoutee\Observer\Eventcustomeradd" />
@@ -53,7 +36,7 @@
 	<event name="controller_action_predispatch_wishlist_index_remove">
 		<observer name="waymoreroutee_eventsapiwishlistremove_call" instance="Routee\WaymoreRoutee\Observer\Eventwishlistremove" />
 	</event>
-    
+
     <!-- below event name controller_action_postdispatch_newsletter_manage_save was not working to changed to the existing one on 15th Jan 2020-->
 	<event name="newsletter_subscriber_save_after">
 		<observer name="waymoreroutee_eventsapinewsletter_call" instance="Routee\WaymoreRoutee\Observer\Eventnewsletter" />

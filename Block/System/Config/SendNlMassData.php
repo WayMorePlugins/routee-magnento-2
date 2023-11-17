@@ -84,9 +84,18 @@ class SendNlMassData extends Field
     /**
      * @return string
      */
-    public function dataSynced()
+    public function subscriberSynced()
     {
         $path = "waymoreroutee/general/subscribermass";
+        return !empty($this->helper->getConfigValue($path));
+    }
+	
+	 	/**
+     * @return string
+     */
+    public function orderSynced()
+    {
+        $path = "waymoreroutee/general/ordermass";
         return !empty($this->helper->getConfigValue($path));
     }
 }

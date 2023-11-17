@@ -104,23 +104,7 @@ class Data extends AbstractHelper
      */
     public function getApiurl($urlFor)
     {
-        $apiUrl = '';
-        switch ($urlFor) {
-            case "auth":
-                $apiUrl = 'https://api.waymore.io/api/authenticate';
-                break;
-            case "massData":
-                $apiUrl = 'https://idata.routee.net/api/data';
-                break;
-            case "events":
-                $apiUrl = 'https://idata.routee.net/api/event';
-                break;
-            case "logs":
-                $apiUrl = 'https://autoforms.routee.net/u001/log.php';
-                break;
-        }
-
-        return $apiUrl;
+        return $this->getConfigValue('waymoreroutee/url/'.$urlFor);
     }
 
     /**
@@ -219,9 +203,6 @@ class Data extends AbstractHelper
             $this->_curl->addHeader("Content-Type", "application/json");
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->_curl->post($apiUrl, json_encode($params));
-
-            //response will contain the output in form of JSON string
-
             $response = $this->_curl->getBody();
 
             $code = $this->_curl->getStatus();

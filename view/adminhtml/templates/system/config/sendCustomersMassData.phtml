@@ -6,11 +6,11 @@
     </p>
 </div>
 
-<?php if ($block->dataSynced()): ?>
-    <script type="text/javascript">
+<?php if ( !$block->productSynced() || $block->customerSynced() ): ?>
+    <script>
         document.getElementById("customer_mass_data").setAttribute("disabled", "true");
     </script>
-<?php else: ?>
+<?php endif; if(!$block->customerSynced()): ?>
     <style>
         #row_waymoreroutee_exportdata_mass_import_customer .note span{
             display: none;
