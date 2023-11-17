@@ -6,12 +6,12 @@
     </p>
 </div>
 
-<?php if ( !$block->subscriberSynced() || $block->wishlistSynced() ): ?>
+<?php if (!$block->subscriberSynced() || $block->wishlistSynced()): ?>
 
     <script>
         document.getElementById("wishlist_mass_data").setAttribute("disabled", "true");
     </script>
-<?php endif; if(!$block->wishlistSynced()): ?>
+<?php endif; if (!$block->wishlistSynced()): ?>
     <style>
         #row_waymoreroutee_exportdata_mass_import_wishlist .note span{
             display: none;

@@ -19,9 +19,9 @@ requirejs(['jquery'], function($){
     })
 
     /**
-     * @param  {apiurl}
-     * @param  {data}
      * @return {void}
+     * @param apiurl
+     * @param data
      */
     function make_ajax(apiurl, data) {
         $('body').trigger('processStart');
@@ -41,8 +41,8 @@ requirejs(['jquery'], function($){
     }
 
     /**
-     * @param  {data}
      * @return {void}
+     * @param data
      */
     function process_result(data) {
         count++;

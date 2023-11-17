@@ -3,6 +3,7 @@ namespace Routee\WaymoreRoutee\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Api\CategoryRepositoryInterface;
@@ -63,7 +64,7 @@ class Eventnewproduct implements ObserverInterface
      *
      * @param EventObserver $observer
      * @return void
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function execute(EventObserver $observer)
     {
@@ -93,8 +94,9 @@ class Eventnewproduct implements ObserverInterface
      * @param object $product
      * @param string $uuid
      * @param int $storeId
+     * @param string $eventName
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getProductData($product, $uuid, $storeId, $eventName)
     {
@@ -126,7 +128,7 @@ class Eventnewproduct implements ObserverInterface
      * @param object $product
      * @param int $storeId
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getProductCategories($product, $storeId)
     {

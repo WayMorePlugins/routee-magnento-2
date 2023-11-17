@@ -7,6 +7,9 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Directory\Model\CountryFactory;
 use Magento\Newsletter\Model\Subscriber;
 
+/**
+ *
+ */
 class Eventneworder implements ObserverInterface
 {
     /**
@@ -123,12 +126,11 @@ class Eventneworder implements ObserverInterface
             $orderProducts[] = [
                 'product_id' => $item->getProductId(),
                 'quantity' => $item->getQtyOrdered(),
-                'option_id' => $this->getSelectedOptions($item),//$item->getItemId(),
+                'option_id' => $this->getSelectedOptions($item),
                 'price' => $item->getOriginalPrice(),
                 'discounted_price' => $item->getPrice()
             ];
         }
-
         return $orderProducts;
     }
 
@@ -136,7 +138,8 @@ class Eventneworder implements ObserverInterface
      * @param $item
      * @return int
      */
-    public function getSelectedOptions($item){
+    public function getSelectedOptions($item)
+    {
         $optId = 0;
         $options = $item->getProductOptions();
         if ($options) {

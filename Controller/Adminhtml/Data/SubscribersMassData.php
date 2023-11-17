@@ -36,11 +36,11 @@ class SubscribersMassData
     public function __construct(
         Data $helper,
         Subscriber $subscriber,
-		ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection
     ) {
         $this->helper   = $helper;
         $this->subscriber = $subscriber;
-		$this->resourceConnection = $resourceConnection;
+        $this->resourceConnection = $resourceConnection;
         $this->limit = $this->helper->getRPRLimit();
     }
 

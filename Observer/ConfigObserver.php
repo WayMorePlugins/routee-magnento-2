@@ -7,6 +7,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\AuthorizationException;
+use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\Data;
@@ -48,9 +49,34 @@ class ConfigObserver implements ObserverInterface
     protected $_productMetadata;
 
     /**
-     * @var RouteeUrls
+     * @var mixed
      */
-    protected $routeeUrl;
+    protected $storeId;
+
+    /**
+     * @var mixed
+     */
+    protected $websiteId;
+
+    /**
+     * @var int
+     */
+    protected $scopeId;
+
+    /**
+     * @var string
+     */
+    protected $scope;
+
+    /**
+     * @var string
+     */
+    protected $routeeUrls;
+
+    /**
+     * @var string
+     */
+    protected $authUrl = '';
 
     /**
      * @param WriterInterface $configWriter
@@ -59,7 +85,7 @@ class ConfigObserver implements ObserverInterface
      * @param ResourceInterface $moduleResource
      * @param StoreManagerInterface $storeManager
      * @param ProductMetadataInterface $productMetadata
-     * @param RouteeUrls $routeeUrl
+     * @param RouteeUrls $routeeUrls
      */
     public function __construct(
         WriterInterface $configWriter,
@@ -68,7 +94,7 @@ class ConfigObserver implements ObserverInterface
         ResourceInterface $moduleResource,
         StoreManagerInterface $storeManager,
         ProductMetadataInterface $productMetadata,
-        RouteeUrls $routeeUrl
+        RouteeUrls $routeeUrls
     ) {
         $this->configWriter       = $configWriter;
         $this->_request           = $request;
@@ -76,7 +102,7 @@ class ConfigObserver implements ObserverInterface
         $this->moduleResource     = $moduleResource;
         $this->_storeManager      = $storeManager;
         $this->_productMetadata   = $productMetadata;
-        $this->routeeUrl          = $routeeUrl;
+        $this->routeeUrls   = $routeeUrls;
     }
 
     /**
@@ -86,53 +112,43 @@ class ConfigObserver implements ObserverInterface
      * @return void
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\CouldNotDeleteException
+     * @throws CouldNotDeleteException
      */
     public function execute(EventObserver $observer)
     {
+        $this->fetchEnvUrls();
         $this->helper->eventExecutedLog('Authentication', 'auth');
-        $this->storeId   = $this->_request->getParam('store', 0);
-        $this->websiteId = $this->_request->getParam('website', 0);
         $this->setScope();
-        $isEnabled       = $this->helper->getIsEnabled($this->storeId);
-
+        $isEnabled = $this->helper->getIsEnabled($this->storeId);
+        $uuid = $this->helper->getUuid($this->storeId);
         if ($isEnabled) {
-            $postedData   = $this->_request->getPost()->get('groups');
-            $this->helper->eventGrabDataLog('Authentication', $postedData, 'auth');
-
-            $postedDataFields = $postedData['general']['fields'];
-            $postedDataUser = trim($postedDataFields['username']["value"]);
-            $postedDataPass = trim($postedDataFields['password']["value"]);
-
-            $uuld = $this->helper->getUuid($this->storeId);
-            $usernameMain = trim($this->helper->getUsername($this->storeId));
-            $passwordMain = trim($this->helper->getPassword($this->storeId));
-            if ($uuld == '' || $postedDataUser != $usernameMain || $passwordMain != $postedDataPass) {
-                $apiUrl = $this->helper->getApiurl('auth');
-                $params = $this->getRequestParam($postedDataFields, $usernameMain, $passwordMain);
-
-                if ($params["username"] != '' && $params["password"] != '') {
-
-                    $this->helper->eventPayloadDataLog('Authentication', $params, 'auth');
-
-                    $responseArr = $this->helper->curl($apiUrl, $params, 'auth');
-
-                    if (isset($responseArr['uuid'])) {
-                        //save callback url to waymore
-                        $this->routeeUrl->saveCallbackUrl($responseArr['uuid']);
-                        $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
-                        $this->helper->clearCache();
-
-                    } else {
-                        $this->saveDefaultValues();
-                        throw new AuthorizationException(__($responseArr['message']));
-                    }
-                }
+            $authInputData = $this->authInputData();
+            $this->helper->eventGrabDataLog('Authentication', $authInputData, 'auth');
+            if ($uuid == '' || !$authInputData['isUsernameSame'] || !$authInputData['isPassSame']) {
+                $this->getAuthentication($authInputData);
             }
         } else {
             $this->saveDefaultValues();
-            $error = "You must enable the module to save the data";
+            $error = $this->getErrorMsg($uuid);
             throw new LocalizedException(__($error));
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function fetchEnvUrls()
+    {
+        $checkUrl = $this->helper->getApiurl('auth');
+
+        if (is_null($checkUrl)) {
+            $this->routeeUrls->deleteConfig();
+            //Fetch and save Routee URLs
+            $urls = $this->routeeUrls->routeeSaveUrls();
+            if (isset($urls['data']) && $urls['success'] == 1) {
+                $key = array_search('auth', array_column($urls['data'], 'type'));
+                $this->authUrl = $urls['data'][$key]['url'];
+            }
         }
     }
 
@@ -149,24 +165,19 @@ class ConfigObserver implements ObserverInterface
     /**
      * Get API Request parameters
      *
-     * @param array $postedDataFields
-     * @param string $usernameMain
-     * @param string $passwordMain
+     * @param $authInputData
      * @return array
      * @throws NoSuchEntityException
      */
-    public function getRequestParam($postedDataFields, $usernameMain, $passwordMain)
+    public function getRequestParam($authInputData)
     {
-        $enable     = $postedDataFields['enable'];
-        $username   = $postedDataFields['username'];
-        $password   = $postedDataFields['password'];
         $webVersion = $this->_productMetadata->getVersion();
         $pluginVersion = $this->moduleResource->getDbVersion('Routee_WaymoreRoutee');
         $domain = $this->_storeManager->getStore()->getBaseUrl();
 
         return [
-            "username"          => !empty($username["value"])?trim($username["value"]):$usernameMain,
-            "password"          => !empty($password["value"])?trim($password["value"]):$passwordMain,
+            "username"          => !empty($authInputData['postedUsername']) ? trim($authInputData['postedUsername']) : $authInputData['dbUsername'],
+            "password"          => !empty($authInputData['postedPass']) ? trim($authInputData['postedPass']) : $authInputData['dbPassword'],
             "source"            => 'Magento',
             "type"              => 'E-Commerce',
             "version"           => $webVersion,
@@ -184,6 +195,9 @@ class ConfigObserver implements ObserverInterface
      */
     public function setScope()
     {
+        $this->storeId   = $this->_request->getParam('store', 0);
+        $this->websiteId = $this->_request->getParam('website', 0);
+
         if ($this->storeId > 0) {
             $this->scopeId = $this->_storeManager->getStore()->getId();
             $this->scope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
@@ -194,5 +208,72 @@ class ConfigObserver implements ObserverInterface
             $this->scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
             $this->scopeId = 0;
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function authInputData()
+    {
+        $postedData   = $this->_request->getPost()->get('groups');
+        $this->helper->eventGrabDataLog('Authentication', $postedData, 'auth');
+
+        $postedDataFields = $postedData['general']['fields'];
+        $postedUsername = trim($postedDataFields['username']["value"]);
+        $postedPass = trim($postedDataFields['password']["value"]);
+        $dbUsername = trim($this->helper->getUsername($this->storeId));
+        $dbPassword = trim($this->helper->getPassword($this->storeId));
+
+        return [
+            'postedUsername' => $postedUsername,
+            'postedPass' => $postedPass,
+            'dbUsername' => $dbUsername,
+            'dbPassword' => $dbPassword,
+            'isUsernameSame' => $postedUsername == $dbUsername,
+            'isPassSame' => $postedPass == $dbPassword
+        ];
+    }
+
+    /**
+     * @param $authInputData
+     * @return void
+     * @throws AuthorizationException
+     * @throws NoSuchEntityException
+     */
+    public function getAuthentication($authInputData)
+    {
+        $apiUrl = empty($this->authUrl) ? $this->helper->getApiurl('auth') : $this->authUrl;
+        $params = $this->getRequestParam($authInputData);
+
+        if ($params["username"] != '' && $params["password"] != '') {
+
+            $this->helper->eventPayloadDataLog('Authentication', $params, 'auth');
+
+            $responseArr = $this->helper->curl($apiUrl, $params, 'auth');
+
+            if (isset($responseArr['uuid'])) {
+                $this->configWriter->save('waymoreroutee/general/enable', 1, $this->scope, $this->scopeId);
+                $this->configWriter->save('waymoreroutee/general/uuid', $responseArr['uuid'], $this->scope, $this->scopeId);
+                $this->configWriter->save('waymoreroutee/general/username', $params["username"], $this->scope, $this->scopeId);
+                $this->configWriter->save('waymoreroutee/general/password', $params["password"], $this->scope, $this->scopeId);
+            } else {
+                $this->saveDefaultValues();
+                throw new AuthorizationException(__($responseArr['message']));
+            }
+        }
+    }
+
+    /**
+     * @param  $uuid
+     * @return string
+     */
+    public function getErrorMsg($uuid)
+    {
+        if ($uuid) {
+            $error = "Your module disabled successfully.";
+        } else {
+            $error = "You must enable the module to save the data";
+        }
+        return $error;
     }
 }

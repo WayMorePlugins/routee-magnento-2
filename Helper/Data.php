@@ -7,6 +7,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\Http\Context as HttpContext;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Directory\Model\CountryFactory;
 use Magento\Store\Model\ScopeInterface;
@@ -83,7 +84,6 @@ class Data extends AbstractHelper
         ResourceConnection $resourceConnection,
         TypeListInterface $cacheTypeList,
         Pool $cacheFrontendPool
-
     ) {
         parent::__construct($context);
         $this->httpContext = $httpContext;
@@ -195,11 +195,11 @@ class Data extends AbstractHelper
      * @param $isLog
      * @return mixed
      */
-    public function curl($apiUrl, $params, $mode, $isLog='')
+    public function curl($apiUrl, $params, $mode, $isLog = '')
     {
         $event = $params['event'] ?? '';
 
-        try{
+        try {
             $this->_curl->addHeader("Content-Type", "application/json");
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->_curl->post($apiUrl, json_encode($params));
@@ -207,16 +207,15 @@ class Data extends AbstractHelper
 
             $code = $this->_curl->getStatus();
 
-            if($isLog != 'yes') {
-                $this->writeLog( $mode, $event, '' );
+            if ($isLog != 'yes') {
+                $this->writeLog($mode, $event, '');
             } else {
                 return ['response' => $response, 'code' => $code];
             }
 
             return json_decode($response, true);
-        }
-        catch (\Exception $e) {
-            $this->writeLog( $mode, $event, $e );
+        } catch (\Exception $e) {
+            $this->writeLog($mode, $event, $e);
             return ['message' => $e->getMessage(), 'code' => $e->getCode()];
         }
     }
@@ -227,15 +226,16 @@ class Data extends AbstractHelper
      * @param $exception
      * @return void
      */
-    private function writeLog( $mode, $event, $exception ) {
+    private function writeLog($mode, $event, $exception)
+    {
         $code = empty($exception) ? '200' : $exception->getCode();
         $msg = empty($exception) ? 'HTTP executed successfully.' : $exception->getMessage();
-        $message = array(
+        $message = [
             'mode' => $mode,
             'event' => $event,
             'code' => $code,
             'exception_message' => $msg
-        );
+        ];
         //Writing http call logs
         $this->logsInitated($mode, $code, $message);
     }
@@ -336,15 +336,18 @@ class Data extends AbstractHelper
      * @param $code
      * @param $logdata
      */
-    public function logsInitated($mode, $code, $logdata) {
+    public function logsInitated($mode, $code, $logdata)
+    {
         $this->saveLogs($mode, $code, $logdata);
         $this->sendErrorLog($code, $logdata);
     }
 
     /**
      * @return void
+     * @throws NoSuchEntityException
      */
-    public function saveLogs($mode, $code, $logdata) {
+    public function saveLogs($mode, $code, $logdata)
+    {
         $connection = $this->resourceConnection->getConnection();
         // get table name
         $table = $this->resourceConnection->getTableName('store_events_logs');
@@ -362,12 +365,13 @@ class Data extends AbstractHelper
     /**
      * @return void
      */
-    public function sendErrorLog($code, $logdata) {
+    public function sendErrorLog($code, $logdata)
+    {
 
-        if($code != 200) {
+        if ($code != 200) {
             $apiUrl = $this->getApiurl('logs');
 
-            $postArr = array(
+            $postArr = [
                 'siteUrl' => $this->_storeManager->getStore()->getUrl(),
                 'uuid' => $this->getUuid(),
                 'event_name' => !empty($logdata['event']) ? $logdata['event'] : $logdata['mode'],
@@ -375,7 +379,7 @@ class Data extends AbstractHelper
                 'log_data' => $logdata,
                 'created_at' => gmdate('d-m-Y H:i:s'),
                 'platform' => "Magento2"
-            );
+            ];
 
             $this->_curl->post($apiUrl, json_encode($postArr));
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
@@ -387,7 +391,8 @@ class Data extends AbstractHelper
     /**
      * @return int
      */
-    public function eventType($mode) {
+    public function eventType($mode)
+    {
         $type = 0;
 
         switch ($mode) {
@@ -410,12 +415,13 @@ class Data extends AbstractHelper
      * @param  $method
      * @return void
      */
-    public function eventExecutedLog($func, $method) {
-        $payload = array(
+    public function eventExecutedLog($func, $method)
+    {
+        $payload = [
             'function' => $func,
             'method' => $method,
             'desc' => 'Hook function executed.'
-        );
+        ];
         $this->saveLogs($method, 200, $payload);
     }
 
@@ -425,13 +431,14 @@ class Data extends AbstractHelper
      * @param  $method
      * @return void
      */
-    public function eventGrabDataLog($func, $data, $method) {
-        $payload = array(
+    public function eventGrabDataLog($func, $data, $method)
+    {
+        $payload = [
             'function' => $func,
             'method' => $method,
             'postdata' => $data,
             'desc' => 'Event data grabbed.'
-        );
+        ];
         $this->saveLogs($method, 200, $payload);
     }
 
@@ -441,19 +448,23 @@ class Data extends AbstractHelper
      * @param  $method
      * @return void
      */
-    public function eventPayloadDataLog($func, $data, $method) {
-        $payload = array(
+    public function eventPayloadDataLog($func, $data, $method)
+    {
+        $payload = [
             'function' => $func,
             'method' => $method,
             'api_payload' => $data,
             'desc' => 'Event API payload is prepared.'
-        );
+        ];
         $this->saveLogs($method, 200, $payload);
     }
 
+    /**
+     * @return void
+     */
     public function clearCache()
     {
-        $types = array('config','layout','block_html','collections','reflection','db_ddl','eav','config_integration','config_integration_api','full_page','translate','config_webservice');
+        $types = ['config','layout','block_html','collections','reflection','db_ddl','eav','config_integration','config_integration_api','full_page','translate','config_webservice'];
         foreach ($types as $type) {
             $this->_cacheTypeList->cleanType($type);
         }

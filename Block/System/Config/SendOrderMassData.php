@@ -89,8 +89,8 @@ class SendOrderMassData extends Field
         $path = "waymoreroutee/general/ordermass";
         return !empty($this->helper->getConfigValue($path));
     }
-	
-	/**
+    
+    /**
      * @return string
      */
     public function customerSynced()

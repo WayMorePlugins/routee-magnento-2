@@ -114,26 +114,26 @@ class SyncMassData extends Action
             $params = $this->getRequest()->getParams();
 
             $result = [];
-            switch ($params['action']){
+            switch ($params['action']) {
                 case 'product_data':
                     $result = $this->handleProductExport($params);
-                break;
+                    break;
 
                 case 'customer_data':
                     $result = $this->handleCustomerExport($params);
-                break;
+                    break;
 
                 case 'order_data':
                     $result = $this->handleOrderExport($params);
-                break;
+                    break;
 
                 case 'subscriber_data':
                     $result = $this->handleSubscriberExport($params);
-                break;
+                    break;
 
                 case 'wishlist_data':
                     $result = $this->handleWishlistExport($params);
-                break;
+                    break;
             }
 
             if ($result) {
@@ -208,7 +208,7 @@ class SyncMassData extends Action
     {
         $result = $this->wishlistsMassData->syncWishlistsData($params);
         if (isset($result['reload']) && $result['reload'] == 1) {
-            $this->saveConfig( 'wishlistmass', 1);
+            $this->saveConfig('wishlistmass', 1);
         }
         return $result;
     }

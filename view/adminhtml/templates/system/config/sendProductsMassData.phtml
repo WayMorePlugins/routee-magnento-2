@@ -7,10 +7,10 @@
 </div>
 
 <script>
-    const url = "<?php echo $block->getAjaxUrl(); ?>";
+    const url = "<?= $block->getAjaxUrl(); ?>";
     requirejs(['jquery'], function($) {
-        let dtransferred = "<?php echo $block->completeDataSynced(); ?>";
-        let getuuid = "<?php echo $block->getUUID(); ?>";
+        let dtransferred = "<?= $block->escapeHtml($block->completeDataSynced()); ?>";
+        let getuuid = "<?= $block->escapeHtml($block->getUUID()); ?>";
         if (!getuuid) {
             $(".send_mass_data").attr("disabled", "true");
         }
@@ -21,7 +21,8 @@
         }
 
         if (dtransferred) {
-            $('#waymoreroutee_general-head').before('<div class="message message-success success"><div data-ui-id="messages-message-success">You have been synchronized with waymore.routee.net.</div></div>');
+            let msg = '<div class="message message-success success"><div data-ui-id="messages-message-success">You have been synchronized with waymore.routee.net.</div></div>';
+            $('#waymoreroutee_general-head').before(msg);
         }
     });
 </script>
@@ -38,4 +39,3 @@
             }
         </style>
 <?php endif; ?>
-

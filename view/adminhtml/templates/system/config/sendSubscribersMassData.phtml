@@ -6,12 +6,12 @@
     </p>
 </div>
 
-<?php if ( !$block->orderSynced() || $block->subscriberSynced() ): ?>
+<?php if (!$block->orderSynced() || $block->subscriberSynced()): ?>
     <script>
         document.getElementById("sub_mass_data").setAttribute("disabled", "true");
     </script>
 
-<?php endif; if(!$block->subscriberSynced()): ?>
+<?php endif; if (!$block->subscriberSynced()): ?>
     <style>
         #row_waymoreroutee_exportdata_mass_import_nl .note span{
             display: none;

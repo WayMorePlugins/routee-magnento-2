@@ -5,12 +5,12 @@
         </button>
     </p>
 </div>
-<?php if ( !$block->customerSynced() || $block->orderSynced() ): ?>
+<?php if (!$block->customerSynced() || $block->orderSynced()): ?>
     <script>
         document.getElementById("order_mass_data").setAttribute("disabled", "true");
     </script>
 
-<?php endif; if(!$block->orderSynced()): ?>
+<?php endif; if (!$block->orderSynced()): ?>
     <style>
         #row_waymoreroutee_exportdata_mass_import_order .note span{
             display: none;

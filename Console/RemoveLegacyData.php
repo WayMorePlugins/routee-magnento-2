@@ -20,8 +20,7 @@ class RemoveLegacyData extends Command
     public function __construct(
         Config $resourceConfig,
         RouteeUrls $routee
-    )
-    {
+    ) {
         $this->resourceConfig = $resourceConfig;
         $this->routee = $routee;
         parent::__construct();

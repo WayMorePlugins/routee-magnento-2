@@ -1,11 +1,10 @@
 <?php
 namespace Routee\WaymoreRoutee\Api;
 
-
-interface PostManagementInterface {
+interface PostManagementInterface
+{
 
     /**
-     * GET for Post api
      * @return string
      */
 

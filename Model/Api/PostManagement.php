@@ -5,10 +5,12 @@ use Psr\Log\LoggerInterface;
 use Magento\Config\Model\ResourceModel\Config;
 use Routee\WaymoreRoutee\Api\PostManagementInterface;
 use Magento\Framework\Webapi\Rest\Request;
+
 /**
  *
  */
-class PostManagement implements PostManagementInterface {
+class PostManagement implements PostManagementInterface
+{
 
     /**
      * @var LoggerInterface
@@ -32,8 +34,7 @@ class PostManagement implements PostManagementInterface {
         LoggerInterface $logger,
         Config $resourceConfig,
         Request $request
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->resourceConfig = $resourceConfig;
         $this->request = $request;
@@ -46,8 +47,8 @@ class PostManagement implements PostManagementInterface {
 
         $response = ['success' => false];
         try {
-            if(isset($post_values['data']) && $post_values['success'] == 1){
-                foreach ($post_values['data'] as $url){
+            if (isset($post_values['data']) && $post_values['success'] == 1) {
+                foreach ($post_values['data'] as $url) {
                     $this->resourceConfig->saveConfig('waymoreroutee/url/'.$url['type'], $url['url']);
                 }
             }

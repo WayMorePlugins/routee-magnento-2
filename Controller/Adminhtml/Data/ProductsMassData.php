@@ -208,7 +208,7 @@ class ProductsMassData
         try {
             $stockItem = $this->_stockItemRepository->get($productId);
             $qty = $stockItem->getQty();
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $qty = 0;
         }
         return intval($qty);

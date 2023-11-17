@@ -3,6 +3,7 @@ namespace Routee\WaymoreRoutee\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Event\Observer as EventObserver;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -61,7 +62,7 @@ class Eventcatalogsearch implements ObserverInterface
      *
      * @param EventObserver $observer
      * @return void
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function execute(EventObserver $observer)
     {
@@ -81,7 +82,7 @@ class Eventcatalogsearch implements ObserverInterface
      * Get API request parameters
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getRequestParam()
     {
@@ -90,7 +91,7 @@ class Eventcatalogsearch implements ObserverInterface
         $storeId    = $this->_storeManager->getStore()->getId();
         $uuid       = $this->helper->getUuid($storeId);
         $customer = $this->_customerSession->getCustomer();
-        $customerId = !is_null($customer->getId()) ? $customer->getId() : 0;
+        $customerId = $customer->getId() !== null ? $customer->getId() : 0;
         if ($customerId) {
             $email = $customer->getEmail();
             $phone = $customer->getDefaultBillingAddress()->getTelephone();

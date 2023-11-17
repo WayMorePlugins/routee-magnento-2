@@ -7,10 +7,11 @@ use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Module\ModuleListInterface;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Routee\WaymoreRoutee\Helper\Data;
 use Magento\User\Model\ResourceModel\User\CollectionFactory as UserCollectionFactory;
+use Magento\Config\Model\ResourceModel\Config;
 
-class RouteeUrls {
+class RouteeUrls
+{
     /**
      * @var string
      */
@@ -46,6 +47,11 @@ class RouteeUrls {
      * @var UserContextInterface
      */
     protected $userContext;
+    
+    /**
+     * @var Config
+     */
+    private $resourceConfig;
 
     /**
      * @param Curl $curl
@@ -54,6 +60,7 @@ class RouteeUrls {
      * @param StoreManagerInterface $storeManager
      * @param Data $data
      * @param UserCollectionFactory $userCollectionFactory
+     * @param Config $resourceConfig
      */
     public function __construct(
         Curl $curl,
@@ -61,7 +68,8 @@ class RouteeUrls {
         ProductMetadataInterface $productMetadata,
         StoreManagerInterface $storeManager,
         Data $data,
-        UserCollectionFactory $userCollectionFactory
+        UserCollectionFactory $userCollectionFactory,
+        Config $resourceConfig
     ) {
         $this->_curl = $curl;
         $this->_moduleList = $_moduleList;
@@ -69,6 +77,7 @@ class RouteeUrls {
         $this->_storeManager = $storeManager;
         $this->helper = $data;
         $this->userCollectionFactory = $userCollectionFactory;
+        $this->resourceConfig = $resourceConfig;
     }
 
     /**
@@ -76,7 +85,7 @@ class RouteeUrls {
      */
     public function fetchUrls()
     {
-        try{
+        try {
             $url = $this->euUrl.'/get';
             $payload = $this->commonEndpointPayload();
             return $this->sendData($url, $payload);
@@ -89,17 +98,18 @@ class RouteeUrls {
      * @return array
      * @throws NoSuchEntityException
      */
-    public function commonEndpointPayload($uuid='')
+    public function commonEndpointPayload($uuid = '')
     {
-        return array(
+        $adminUser = $this->getAdminUsers();
+        return [
             "store_uuid" => $uuid ?? $this->helper->getUuid(),
             "store_url" => $this->_storeManager->getStore()->getBaseUrl(),
             "platform" => "Magento2",
             "plugin_version" => $this->getExtensionVersion(),
             "platform_version" => $this->getMagentoVersion(),
-            'user_id' => $this->getAdminUsers()['id'] ?? '',
-            "email" => $this->getAdminUsers()['email'] ?? ''
-        );
+            'user_id' => $adminUser['id'] ?? '',
+            "email" => $adminUser['email'] ?? ''
+        ];
     }
 
 
@@ -122,7 +132,7 @@ class RouteeUrls {
     public function getExtensionVersion()
     {
         return $this->_moduleList
-            ->getOne('Routee_WaymoreRoutee')['setup_version'];
+            ->getOne('Routee_WaymoreRoutee')['setup_version'] ?? '';
     }
 
     /**
@@ -130,7 +140,7 @@ class RouteeUrls {
      */
     public function getMagentoVersion()
     {
-        return $this->productMetadata->getVersion();;
+        return $this->productMetadata->getVersion();
     }
 
     /**
@@ -166,6 +176,10 @@ class RouteeUrls {
         return $adminUsers[0] ?? [];
     }
 
+    /**
+     * @return void
+     * @throws NoSuchEntityException
+     */
     public function uninstallModuleCallback()
     {
         $payload = $this->commonEndpointPayload();
@@ -174,6 +188,10 @@ class RouteeUrls {
         $this->uninstallModule();
     }
 
+    /**
+     * @return void
+     * @throws NoSuchEntityException
+     */
     public function uninstallModule()
     {
         $storeId = $this->_storeManager->getStore()->getId();
@@ -186,8 +204,50 @@ class RouteeUrls {
 
         $url = $this->helper->getApiurl('event');
 
-        $this->_curl->addHeader("Content-Type", "application/json");
-        $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
-        $this->_curl->post($url, $eventData);
+        if ($url) {
+            $this->_curl->addHeader("Content-Type", "application/json");
+            $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
+            $this->_curl->post($url, $eventData);
+        }
+    }
+    
+    /**
+     * @return void
+     */
+    public function deleteConfig()
+    {
+        $paths = [
+            'general/enable',
+            'general/username',
+            'general/password',
+            'general/uuid',
+            'general/productmass',
+            'general/customermass',
+            'general/ordermass',
+            'general/subscribermass',
+            'general/wishlistmass',
+            'url/auth',
+            'url/data',
+            'url/logs',
+            'url/event'
+        ];
+        foreach ($paths as $path) {
+            $this->resourceConfig->deleteConfig('waymoreroutee/' . $path);
+        }
+    }
+    
+    /**
+     * @return void
+     */
+    public function routeeSaveUrls()
+    {
+        $urls = $this->fetchUrls();
+        if (isset($urls['data']) && $urls['success'] == 1) {
+            foreach ($urls['data'] as $url) {
+                $this->resourceConfig->saveConfig('waymoreroutee/url/'.$url['type'], $url['url']);
+            }
+        }
+
+        return $urls;
     }
 }

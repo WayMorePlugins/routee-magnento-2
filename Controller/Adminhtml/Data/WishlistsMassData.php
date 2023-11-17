@@ -5,7 +5,7 @@ use Routee\WaymoreRoutee\Helper\Data;
 use Magento\Framework\App\ResourceConnection;
 
 /**
- *Mass data export class for wishlist data
+ * Mass data export class for wishlist data
  */
 class WishlistsMassData
 {
@@ -29,10 +29,10 @@ class WishlistsMassData
      */
     public function __construct(
         Data $helper,
-		ResourceConnection $resourceConnection
+        ResourceConnection $resourceConnection
     ) {
         $this->helper           = $helper;
-		$this->resourceConnection = $resourceConnection;
+        $this->resourceConnection = $resourceConnection;
         $this->limit = $this->helper->getRPRLimit();
     }
 
@@ -126,15 +126,15 @@ class WishlistsMassData
      * @param int $wishlistId
      * @return array
      */
-	public function getWishlistProductIds($wishlistId)
-	{
-		$tableName = $this->resourceConnection->getTableName('wishlist_item');
+    public function getWishlistProductIds($wishlistId)
+    {
+        $tableName = $this->resourceConnection->getTableName('wishlist_item');
         $select = "SELECT product_id FROM $tableName WHERE wishlist_id = $wishlistId";
         $wishlistItems = $this->resourceConnection->getConnection()->fetchAll($select);
-		$pIds = [];
-		foreach ($wishlistItems as $item) {
-			$pIds[] = $item['product_id'];
-		}
-		return $pIds;
-	}
+        $pIds = [];
+        foreach ($wishlistItems as $item) {
+            $pIds[] = $item['product_id'];
+        }
+        return $pIds;
+    }
 }

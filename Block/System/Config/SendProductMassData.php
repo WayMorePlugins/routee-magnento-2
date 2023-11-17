@@ -5,6 +5,7 @@ namespace Routee\WaymoreRoutee\Block\System\Config;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\Data;
 
 class SendProductMassData extends Field
@@ -92,6 +93,7 @@ class SendProductMassData extends Field
 
     /**
      * @return string
+     * @throws NoSuchEntityException
      */
     public function getUUID()
     {
