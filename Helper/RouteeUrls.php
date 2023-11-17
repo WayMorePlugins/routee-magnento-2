@@ -52,6 +52,11 @@ class RouteeUrls
      * @var Config
      */
     private $resourceConfig;
+    
+    /**
+     * @var UserCollectionFactory
+     */
+    private  $userCollectionFactory;
 
     /**
      * @param Curl $curl
