@@ -198,11 +198,14 @@ class Data extends AbstractHelper
     public function curl($apiUrl, $params, $mode, $isLog = '')
     {
         $event = $params['event'] ?? '';
-
-        try {
+        $data = json_encode($params);
+        if ($mode == 'auth'){
+            $data = htmlspecialchars_decode($data);
+        }
+        try{
             $this->_curl->addHeader("Content-Type", "application/json");
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
-            $this->_curl->post($apiUrl, json_encode($params));
+            $this->_curl->post($apiUrl, $data);
             $response = $this->_curl->getBody();
 
             $code = $this->_curl->getStatus();
