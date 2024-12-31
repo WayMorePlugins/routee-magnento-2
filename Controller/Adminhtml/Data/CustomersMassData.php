@@ -15,12 +15,12 @@ class CustomersMassData
     /**
      * @var Data
      */
-    protected $helper;
+    private $helper;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $_storeManager;
+    private $storeManager;
 
     /**
      * @var int
@@ -30,12 +30,12 @@ class CustomersMassData
     /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    private $resourceConnection;
 
     /**
      * @var Customer
      */
-    protected $customer;
+    private $customer;
 
     /**
      * @param Data $helper
@@ -50,13 +50,11 @@ class CustomersMassData
         Customer $customer
     ) {
         $this->helper              = $helper;
-        $this->_storeManager       = $storeManager;
+        $this->storeManager       = $storeManager;
         $this->resourceConnection  = $resourceConnection;
         $this->customer            = $customer;
         $this->limit               = $this->helper->getRPRLimit();
     }
-
-
 
     /**
      * Get Customer data
@@ -70,7 +68,7 @@ class CustomersMassData
         $page = $requestData['cycle_count'];
         $uuid = $requestData['uuid'];
         $storeId = $requestData['store_id'];
-        $websiteId = $this->_storeManager->getStore($storeId)->getWebsiteId();
+        $websiteId = $this->storeManager->getStore($storeId)->getWebsiteId();
         return $this->massApiCustomerAction($uuid, $websiteId, $page);
     }
 
@@ -98,7 +96,7 @@ class CustomersMassData
             }
 
             $this->helper->eventPayloadDataLog('MassCustomer', count($mass_data['data'][0]['object']), 'massdata');
-            $apiUrl     = $this->helper->getApiurl('data');
+            $apiUrl = $this->helper->getApiurl('data');
             $responseArr = $this->helper->curl($apiUrl, $mass_data, 'massdata');
             $result = ['reload' => 0];
             if (!empty($responseArr['message'])) {

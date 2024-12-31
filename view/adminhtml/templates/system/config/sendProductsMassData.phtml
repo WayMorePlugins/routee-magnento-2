@@ -1,16 +1,16 @@
-<div class="pp-buttons-container">
-    <p>
-        <button data-action="product_data" class="send_mass_data" id="product_mass_data" type="button">
-            <?= $block->escapeHtml(__('Start Syncing')) ?>
-        </button>
-    </p>
-</div>
+<?php
+/**
+ * @var Routee\WaymoreROutee\Block\System\Config\SendProductMassData $block
+ */
+
+echo $block->getButtonHtml();
+?>
 
 <script>
     const url = "<?= $block->getAjaxUrl(); ?>";
     requirejs(['jquery'], function($) {
-        let dtransferred = "<?= $block->escapeHtml($block->completeDataSynced()); ?>";
-        let getuuid = "<?= $block->escapeHtml($block->getUUID()); ?>";
+        let dtransferred = "<?= $block->completeDataSynced(); ?>";
+        let getuuid = "<?= $block->getUUID(); ?>";
         if (!getuuid) {
             $(".send_mass_data").attr("disabled", "true");
         }
@@ -28,14 +28,10 @@
 </script>
 
 
-<?php if ($block->productSynced()): ?>
-        <script>
-                document.getElementById("product_mass_data").setAttribute("disabled", "true");
-        </script>
-<?php else: ?>
+<?php if (!$block->productSynced()) { ?>
         <style>
             #row_waymoreroutee_exportdata_mass_import_product .note span{
                 display: none;
             }
         </style>
-<?php endif; ?>
+<?php } ?>

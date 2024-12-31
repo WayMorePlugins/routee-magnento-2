@@ -199,10 +199,10 @@ class Data extends AbstractHelper
     {
         $event = $params['event'] ?? '';
         $data = json_encode($params);
-        if ($mode == 'auth'){
+        if ($mode == 'auth') {
             $data = htmlspecialchars_decode($data);
         }
-        try{
+        try {
             $this->_curl->addHeader("Content-Type", "application/json");
             $this->_curl->setOption(CURLOPT_RETURNTRANSFER, true);
             $this->_curl->post($apiUrl, $data);

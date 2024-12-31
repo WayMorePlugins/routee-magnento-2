@@ -1,10 +1,11 @@
 <?php
- 
+
 namespace Routee\WaymoreRoutee\Block\System\Config;
 
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\LocalizedException;
 use Routee\WaymoreRoutee\Helper\Data;
 
 class ExportLogsAPI extends Field
@@ -39,20 +40,6 @@ class ExportLogsAPI extends Field
     }
 
     /**
-     * Set template to itself
-     *
-     * @return $this
-     */
-    protected function _prepareLayout()
-    {
-        parent::_prepareLayout();
-        if (!$this->getTemplate()) {
-            $this->setTemplate(static::_template);
-        }
-        return $this;
-    }
-
-    /**
      * Remove scope label
      *
      * @param  AbstractElement $element
@@ -72,13 +59,31 @@ class ExportLogsAPI extends Field
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        $this->addData(
-            [
-                'id' => 'send_mass_data',
-                'label' => __('Start Sync'),
-            ]
-        );
         return $this->_toHtml();
+    }
+
+    /**
+     * @return mixed
+     * @throws LocalizedException
+     */
+    public function getButtonHtml()
+    {
+        $button = $this->getLayout()
+            ->createBlock('Magento\Backend\Block\Widget\Button')
+            ->setData(
+                [
+                    'id' => 'routee_log_export_api',
+                    'class' => 'primary routee-log-export-api',
+                    'label' => __('Send Logs')
+                ]
+            )
+            ->setDataAttribute(
+                [
+                    'action' => 'export_log_api',
+                    'url' => $this->getAjaxUrlApi()
+                ]
+            );
+        return $button->toHtml();
     }
 
     /**

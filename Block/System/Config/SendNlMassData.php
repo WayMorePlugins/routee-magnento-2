@@ -5,6 +5,7 @@ namespace Routee\WaymoreRoutee\Block\System\Config;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\LocalizedException;
 use Routee\WaymoreRoutee\Helper\Data;
 
 class SendNlMassData extends Field
@@ -39,20 +40,6 @@ class SendNlMassData extends Field
     }
 
     /**
-     * Set template to itself
-     *
-     * @return $this
-     */
-    protected function _prepareLayout()
-    {
-        parent::_prepareLayout();
-        if (!$this->getTemplate()) {
-            $this->setTemplate(static::_template);
-        }
-        return $this;
-    }
-
-    /**
      * Remove scope label
      *
      * @param  AbstractElement $element
@@ -72,27 +59,45 @@ class SendNlMassData extends Field
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        $this->addData(
-            [
-                'id' => 'send_mass_data',
-                'label' => __('Start Sync')
-            ]
-        );
         return $this->_toHtml();
     }
 
     /**
-     * @return string
+     * @return mixed
+     * @throws LocalizedException
+     */
+    public function getButtonHtml()
+    {
+        $button = $this->getLayout()
+            ->createBlock('Magento\Backend\Block\Widget\Button')
+            ->setData(
+                [
+                    'id' => 'sub_mass_data',
+                    'class' => 'primary send_mass_data',
+                    'label' => __('Start Syncing'),
+                    'disabled' => !$this->orderSynced() || $this->subscriberSynced()
+                ]
+            )
+            ->setDataAttribute(
+                [
+                    'action' => 'subscriber_data'
+                ]
+            );
+        return $button->toHtml();
+    }
+
+    /**
+     * @return bool
      */
     public function subscriberSynced()
     {
         $path = "waymoreroutee/general/subscribermass";
         return !empty($this->helper->getConfigValue($path));
     }
-    
-         /**
-          * @return string
-          */
+
+     /**
+      * @return bool
+      */
     public function orderSynced()
     {
         $path = "waymoreroutee/general/ordermass";

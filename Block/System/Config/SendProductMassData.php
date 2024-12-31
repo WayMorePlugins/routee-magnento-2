@@ -5,6 +5,7 @@ namespace Routee\WaymoreRoutee\Block\System\Config;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\Data;
 
@@ -40,20 +41,6 @@ class SendProductMassData extends Field
     }
 
     /**
-     * Set template to itself
-     *
-     * @return $this
-     */
-    protected function _prepareLayout()
-    {
-        parent::_prepareLayout();
-        if (!$this->getTemplate()) {
-            $this->setTemplate(static::_template);
-        }
-        return $this;
-    }
-
-    /**
      * Remove scope label
      *
      * @param  AbstractElement $element
@@ -73,13 +60,31 @@ class SendProductMassData extends Field
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        $this->addData(
-            [
-                'id' => 'send_mass_data',
-                'label' => __('Start Sync'),
-            ]
-        );
         return $this->_toHtml();
+    }
+
+    /**
+     * @return mixed
+     * @throws LocalizedException
+     */
+    public function getButtonHtml()
+    {
+        $button = $this->getLayout()
+            ->createBlock('Magento\Backend\Block\Widget\Button')
+            ->setData(
+                [
+                    'id' => 'product_mass_data',
+                    'class' => 'primary send_mass_data',
+                    'label' => __('Start Syncing'),
+                    'disabled' => $this->productSynced()
+                ]
+            )
+            ->setDataAttribute(
+                [
+                    'action' => 'product_data'
+                ]
+            );
+        return $button->toHtml();
     }
 
     /**
@@ -102,7 +107,7 @@ class SendProductMassData extends Field
     }
 
     /**
-     * @return string
+     * @return bool
      */
     public function productSynced()
     {

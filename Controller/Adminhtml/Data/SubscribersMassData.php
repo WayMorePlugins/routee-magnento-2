@@ -13,7 +13,7 @@ class SubscribersMassData
     /**
      * @var Data
      */
-    protected $helper;
+    private $helper;
 
     /**
      * @var int

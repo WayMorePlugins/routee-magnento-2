@@ -11,7 +11,6 @@ use Magento\Framework\Webapi\Rest\Request;
  */
 class PostManagement implements PostManagementInterface
 {
-
     /**
      * @var LoggerInterface
      */
@@ -40,7 +39,9 @@ class PostManagement implements PostManagementInterface
         $this->request = $request;
     }
 
-
+    /**
+     * @return false|string
+     */
     public function processData()
     {
         $post_values =  $this->request->getBodyParams();

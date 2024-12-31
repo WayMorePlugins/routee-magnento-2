@@ -2,6 +2,7 @@
 
 namespace Routee\WaymoreRoutee\Console;
 
+use Magento\Framework\Exception\NoSuchEntityException;
 use Routee\WaymoreRoutee\Helper\RouteeUrls;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -41,6 +42,7 @@ class RemoveLegacyData extends Command
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return void
+     * @throws NoSuchEntityException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

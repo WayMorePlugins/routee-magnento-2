@@ -1,33 +1,31 @@
+<?php
+/**
+ * @var Routee\WaymoreROutee\Block\System\Config\ExportLogsCSV $block
+ */
 
-    <div class="pp-buttons-container">
-        <p>
-            <button data-action="export_log_csv" class="routee-log-export-btn" id="routee-log-export-btn" type="button">
-                <?= $block->escapeHtml(__('Logs CSV')) ?>
-            </button>
-        </p>
-    </div>
+    echo $block->getButtonHtml();
+?>
 
 <script>
     requirejs(['jquery'], function($) {
         //Download Log CSV file
-        $("#routee-log-export-btn").click(function (event) {
+        $("#routee_log_export_btn").click(function (event) {
             event.preventDefault();
             $(this).attr("disabled", "true");
-            action = $(this).attr("data-action");
-            let data = {'action' :action};
-            let logurl = "<?= $block->getAjaxUrlCsv(); ?>";
-            make_log_ajax(logurl, data, 'logs');
+            let data = {'action' : $(this).attr("data-action")};
+            let logUrl = "<?= $block->getAjaxUrlCsv(); ?>";
+            make_log_ajax(logUrl, data, 'logs');
         })
 
         /**
-         *
+         * @param logUrl
          * @param data
          * @param type
          */
-        function make_log_ajax(logurl, data, type) {
+        function make_log_ajax(logUrl, data, type) {
             $.ajax({
                 type: "POST",
-                url: logurl,
+                url: logUrl,
                 data: data,
                 dataType: 'json',
             }).fail(function (jqXHR, textStatus, errorThrown) {
@@ -35,22 +33,21 @@
                 console.log(errorThrown);
                 console.log(jqXHR);
             }).done(function (data, textStatus, jqXHR) {
-                if(type == 'logs' && data != null) {
+                if(type === 'logs' && data != null) {
                     generate_csv(data)
-                    $("#routee-log-export-btn").after('<p class="note"><span>CSV Exported successfully.</span></p>')
+                    $("#routee_log_export_btn").after('<p class="note"><span>CSV Exported successfully.</span></p>')
                 } else {
-                    $("#routee-log-export-btn").after('<p class="note"><span>Nothing to export.</span></p>');
+                    $("#routee_log_export_btn").after('<p class="note"><span>Nothing to export.</span></p>');
                 }
             });
         }
 
         /**
-         *
          * @param success
          */
         function generate_csv(success) {
             if (success.success == "yes") {
-                var rec_arr = success.data;
+                let rec_arr = success.data;
                 let csv_arr = [];
                 let csv_header_arr = [
                     "ID",
@@ -64,7 +61,7 @@
                 csv_arr.push(csv_header_arr);
                 let record_arr = [];
 
-                for (i = 0; i < rec_arr.length; i++) {
+                for (let i = 0; i < rec_arr.length; i++) {
 
                     record_arr.push(rec_arr[i].id);
                     record_arr.push(rec_arr[i].store_url);
@@ -77,30 +74,29 @@
                     record_arr = [];
                 }
 
-                var csv_content = arrayToCsv(csv_arr);
-                var timeElapsed = Date.now();
-                var today = new Date(timeElapsed);
-                var year = today.getFullYear();
-                var month = today.getMonth() + 1;
-                var day = today.getDate();
-                var filename = "Routee_Log_" + year + month + day + ".csv";
+                let csv_content = arrayToCsv(csv_arr);
+                let timeElapsed = Date.now();
+                let today = new Date(timeElapsed);
+                let year = today.getFullYear();
+                let month = today.getMonth() + 1;
+                let day = today.getDate();
+                let filename = "Routee_Log_" + year + month + day + ".csv";
                 downloadBlob(csv_content, filename, "text/csv;charset=utf-8;");
             }
         }
 
         /**
-         *
          * @param content
          * @param filename
          * @param contentType
          */
         function downloadBlob(content, filename, contentType) {
             // Create a blob
-            var blob = new Blob([content], { type: contentType });
-            var url = URL.createObjectURL(blob);
+            let blob = new Blob([content], { type: contentType });
+            let url = URL.createObjectURL(blob);
 
             // Create a link to download it
-            var pom = document.createElement("a");
+            let pom = document.createElement("a");
             pom.href = url;
             pom.setAttribute("download", filename);
             pom.click();
@@ -108,7 +104,6 @@
         }
 
         /**
-         *
          * @param data
          * @returns {*}
          */

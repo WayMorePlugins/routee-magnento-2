@@ -3,7 +3,6 @@ namespace Routee\WaymoreRoutee\Controller\Adminhtml\Data;
 
 use Magento\Framework\Exception\LocalizedException;
 use Routee\WaymoreRoutee\Helper\Data;
-use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 use Magento\Sales\Model\Order;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -16,12 +15,7 @@ class OrdersMassData
     /**
      * @var Data
      */
-    protected $helper;
-
-    /**
-     * @var CollectionFactory
-     */
-    protected $_orderCollectionFactory;
+    private $helper;
 
     /**
      * @var int
@@ -31,27 +25,24 @@ class OrdersMassData
     /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    private $resourceConnection;
 
     /**
      * @var OrderInterface
      */
-    protected $order;
+    private $order;
 
     /**
      * @param Data $helper
-     * @param Order $orderCollectionFactory
      * @param ResourceConnection $resourceConnection
      * @param OrderInterface $order
      */
     public function __construct(
         Data $helper,
-        Order $orderCollectionFactory,
         ResourceConnection $resourceConnection,
         OrderInterface $order
     ) {
         $this->helper                   = $helper;
-        $this->_orderCollectionFactory  = $orderCollectionFactory;
         $this->resourceConnection       = $resourceConnection;
         $this->order = $order;
         $this->limit = $this->helper->getRPRLimit();

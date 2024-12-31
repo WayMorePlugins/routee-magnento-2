@@ -1,19 +1,13 @@
-<div class="pp-buttons-container">
-    <p>
-        <button data-action="customer_data" class="send_mass_data" id="customer_mass_data" type="button">
-            <?= $block->escapeHtml(__('Start Syncing')) ?>
-        </button>
-    </p>
-</div>
+<?php
+/**
+ * @var Routee\WaymoreROutee\Block\System\Config\SendCustomerMassData $block
+ */
+    echo $block->getButtonHtml();
 
-<?php if (!$block->productSynced() || $block->customerSynced()): ?>
-    <script>
-        document.getElementById("customer_mass_data").setAttribute("disabled", "true");
-    </script>
-<?php endif; if (!$block->customerSynced()): ?>
-    <style>
-        #row_waymoreroutee_exportdata_mass_import_customer .note span{
-            display: none;
-        }
-    </style>
-<?php endif; ?>
+if (!$block->customerSynced()) { ?>
+        <style>
+            #row_waymoreroutee_exportdata_mass_import_customer .note span{
+                display: none;
+            }
+        </style>
+<?php } ?>

@@ -3,22 +3,13 @@ namespace Routee\WaymoreRoutee\Controller\Adminhtml\Logs;
 
 use \Magento\Backend\App\Action;
 use \Magento\Backend\App\Action\Context;
-use \Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\App\Cache\Frontend\Pool;
-
 use Magento\Framework\App\ResourceConnection;
 use Routee\WaymoreRoutee\Helper\Data;
-use Magento\Store\Model\StoreManagerInterface;
 
 class ExportLogs extends Action
 {
-    /**
-     * @var WriterInterface
-     */
-    protected $_saveConfig;
 
     /**
      * @var Json
@@ -26,58 +17,30 @@ class ExportLogs extends Action
     protected $resultFactory;
 
     /**
-     * @var TypeListInterface
-     */
-    protected $cacheTypeList;
-
-    /**
-     * @var Pool
-     */
-    protected $cacheFrontendPool;
-
-    /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    private $resourceConnection;
 
     /**
      * @var Data
      */
-    protected $helper;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    protected $_storeManager;
+    private $helper;
 
     /**
      * @param Context $context
-     * @param WriterInterface $configWriter
      * @param Json $response
-     * @param TypeListInterface $cacheTypeList
-     * @param Pool $cacheFrontendPool
      * @param ResourceConnection $resourceConnection
      * @param Data $helper
-     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         Context            $context,
-        WriterInterface    $configWriter,
         Json               $response,
-        TypeListInterface  $cacheTypeList,
-        Pool               $cacheFrontendPool,
         ResourceConnection $resourceConnection,
-        Data $helper,
-        StoreManagerInterface $storeManager
+        Data $helper
     ) {
-        $this->_saveConfig = $configWriter;
         $this->resultFactory = $response;
-        $this->cacheTypeList = $cacheTypeList;
-        $this->cacheFrontendPool = $cacheFrontendPool;
         $this->resourceConnection = $resourceConnection;
         $this->helper = $helper;
-        $this->_storeManager = $storeManager;
-        $this->limit = $this->helper->getRPRLimit();
         parent::__construct($context);
     }
 

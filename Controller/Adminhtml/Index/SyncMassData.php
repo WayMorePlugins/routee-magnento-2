@@ -23,32 +23,32 @@ class SyncMassData extends Action
     /**
      * @var CustomersMassData
      */
-    protected $customersMassData;
+    private $customersMassData;
 
     /**
      * @var ProductsMassData
      */
-    protected $productsMassData;
+    private $productsMassData;
 
     /**
      * @var OrdersMassData
      */
-    protected $ordersMassData;
+    private $ordersMassData;
 
     /**
      * @var WishlistsMassData
      */
-    protected $wishlistsMassData;
+    private $wishlistsMassData;
 
     /**
      * @var SubscribersMassData
      */
-    protected $subscribersMassData;
+    private $subscribersMassData;
 
     /**
      * @var WriterInterface
      */
-    protected $_saveConfig;
+    private $configWriter;
 
     /**
      * @var Json
@@ -58,7 +58,7 @@ class SyncMassData extends Action
     /**
      * @var Data
      */
-    protected $helper;
+    private $helper;
 
     /**
      * @param Context $context
@@ -87,7 +87,7 @@ class SyncMassData extends Action
         $this->ordersMassData      = $ordersMassData;
         $this->wishlistsMassData   = $wishlistsMassData;
         $this->subscribersMassData = $subscribersMassData;
-        $this->_saveConfig   = $configWriter;
+        $this->configWriter   = $configWriter;
         $this->resultFactory = $response;
         $this->helper = $helper;
         parent::__construct($context);
@@ -220,6 +220,6 @@ class SyncMassData extends Action
      */
     private function saveConfig($var, $value)
     {
-        $this->_saveConfig->save("waymoreroutee/general/" . $var, $value, 'default', 0);
+        $this->configWriter->save("waymoreroutee/general/" . $var, $value, 'default', 0);
     }
 }

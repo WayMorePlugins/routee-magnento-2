@@ -9,7 +9,7 @@ requirejs(['jquery'], function($){
         make_ajax(url, {action : action, cycle_count : count, form_key: window.FORM_KEY});
     })
 
-    $("#routee-log-export-api").on("click", function (e) {
+    $("#routee_log_export_api").on("click", function (e) {
         e.preventDefault();
         $(this).attr("disabled", "true");
         var bulklogaction = $(this).attr("data-action");

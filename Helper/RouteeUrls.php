@@ -15,7 +15,6 @@ class RouteeUrls
     /**
      * @var string
      */
-
     public $euUrl = 'https://eu.api.wm.amdtelecom.net/api/endpoints';
 
     /**
@@ -47,16 +46,16 @@ class RouteeUrls
      * @var UserContextInterface
      */
     protected $userContext;
-    
+
     /**
      * @var Config
      */
     private $resourceConfig;
-    
+
     /**
      * @var UserCollectionFactory
      */
-    private  $userCollectionFactory;
+    private $userCollectionFactory;
 
     /**
      * @param Curl $curl
@@ -177,7 +176,6 @@ class RouteeUrls
                 'email' => $user->getEmail()
             ];
         }
-
         return $adminUsers[0] ?? [];
     }
 
@@ -215,7 +213,7 @@ class RouteeUrls
             $this->_curl->post($url, $eventData);
         }
     }
-    
+
     /**
      * @return void
      */
@@ -240,7 +238,7 @@ class RouteeUrls
             $this->resourceConfig->deleteConfig('waymoreroutee/' . $path);
         }
     }
-    
+
     /**
      * @return void
      */
@@ -252,7 +250,6 @@ class RouteeUrls
                 $this->resourceConfig->saveConfig('waymoreroutee/url/'.$url['type'], $url['url']);
             }
         }
-
         return $urls;
     }
 }

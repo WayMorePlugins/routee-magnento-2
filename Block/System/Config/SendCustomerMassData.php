@@ -5,6 +5,7 @@ namespace Routee\WaymoreRoutee\Block\System\Config;
 use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\Exception\LocalizedException;
 use Routee\WaymoreRoutee\Helper\Data;
 
 class SendCustomerMassData extends Field
@@ -39,20 +40,6 @@ class SendCustomerMassData extends Field
     }
 
     /**
-     * Set template to itself
-     *
-     * @return $this
-     */
-    protected function _prepareLayout()
-    {
-        parent::_prepareLayout();
-        if (!$this->getTemplate()) {
-            $this->setTemplate(static::_template);
-        }
-        return $this;
-    }
-
-    /**
      * Remove scope label
      *
      * @param  AbstractElement $element
@@ -72,17 +59,35 @@ class SendCustomerMassData extends Field
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        $this->addData(
-            [
-                'id' => 'send_mass_data',
-                'label' => __('Start Sync')
-            ]
-        );
         return $this->_toHtml();
     }
 
     /**
-     * @return string
+     * @return mixed
+     * @throws LocalizedException
+     */
+    public function getButtonHtml()
+    {
+        $button = $this->getLayout()
+            ->createBlock('Magento\Backend\Block\Widget\Button')
+            ->setData(
+                [
+                    'id' => 'customer_mass_data',
+                    'class' => 'primary send_mass_data',
+                    'label' => __('Start Syncing'),
+                    'disabled' => !$this->productSynced() || $this->customerSynced()
+                ]
+            )
+            ->setDataAttribute(
+                [
+                    'action' => 'customer_data'
+                ]
+            );
+        return $button->toHtml();
+    }
+
+    /**
+     * @return bool
      */
     public function customerSynced()
     {
@@ -91,7 +96,7 @@ class SendCustomerMassData extends Field
     }
 
     /**
-     * @return string
+     * @return bool
      */
     public function productSynced()
     {

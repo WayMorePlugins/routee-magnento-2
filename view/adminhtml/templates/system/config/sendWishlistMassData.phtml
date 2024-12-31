@@ -1,20 +1,13 @@
-<div class="pp-buttons-container">
-    <p>
-        <button data-action="wishlist_data" class="send_mass_data" id="wishlist_mass_data" type="button">
-            <?= $block->escapeHtml(__('Start Syncing')) ?>
-        </button>
-    </p>
-</div>
+<?php
+/**
+ * @var Routee\WaymoreROutee\Block\System\Config\SendWishlistMassData $block
+ */
+    echo $block->getButtonHtml();
 
-<?php if (!$block->subscriberSynced() || $block->wishlistSynced()): ?>
-
-    <script>
-        document.getElementById("wishlist_mass_data").setAttribute("disabled", "true");
-    </script>
-<?php endif; if (!$block->wishlistSynced()): ?>
-    <style>
-        #row_waymoreroutee_exportdata_mass_import_wishlist .note span{
-            display: none;
-        }
-    </style>
-<?php endif; ?>
+if (!$block->wishlistSynced()) { ?>
+        <style>
+            #row_waymoreroutee_exportdata_mass_import_wishlist .note span{
+                display: none;
+            }
+        </style>
+    <?php } ?>

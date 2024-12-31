@@ -1,20 +1,14 @@
-<div class="pp-buttons-container">
-    <p>
-        <button data-action="subscriber_data" class="send_mass_data" id="sub_mass_data" type="button">
-            <?= $block->escapeHtml(__('Start Syncing')) ?>
-        </button>
-    </p>
-</div>
+<?php
+/**
+ * @var Routee\WaymoreROutee\Block\System\Config\SendNlMassData $block
+ */
 
-<?php if (!$block->orderSynced() || $block->subscriberSynced()): ?>
-    <script>
-        document.getElementById("sub_mass_data").setAttribute("disabled", "true");
-    </script>
+    echo $block->getButtonHtml();
 
-<?php endif; if (!$block->subscriberSynced()): ?>
-    <style>
-        #row_waymoreroutee_exportdata_mass_import_nl .note span{
-            display: none;
-        }
-    </style>
-<?php endif; ?>
+if (!$block->subscriberSynced()) { ?>
+        <style>
+            #row_waymoreroutee_exportdata_mass_import_nl .note span{
+                display: none;
+            }
+        </style>
+<?php } ?>

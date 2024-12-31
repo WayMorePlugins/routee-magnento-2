@@ -21,27 +21,27 @@ class ProductsMassData
     /**
      * @var Data
      */
-    protected $helper;
+    private $helper;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $_storeManager;
+    private $storeManager;
 
     /**
      * @var CategoryRepositoryInterface
      */
-    protected $categoryRepository;
+    private $categoryRepository;
 
     /**
      * @var Option
      */
-    protected $productOptions;
+    private $productOptions;
 
     /**
      * @var StockItemRepository
      */
-    protected $_stockItemRepository;
+    private $stockItemRepository;
 
     /**
      * @var int
@@ -51,12 +51,12 @@ class ProductsMassData
     /**
      * @var ResourceConnection
      */
-    protected $resourceConnection;
+    private $resourceConnection;
 
     /**
      * @var ProductRepository
      */
-    protected $_productRepository;
+    private $productRepository;
 
     /**
      * @param Data $helper
@@ -77,12 +77,12 @@ class ProductsMassData
         ProductRepository $productRepository
     ) {
         $this->helper               = $helper;
-        $this->_storeManager        = $storeManager;
+        $this->storeManager        = $storeManager;
         $this->categoryRepository   = $categoryRepository;
         $this->productOptions       = $productOptions;
-        $this->_stockItemRepository = $stockItemRepository;
+        $this->stockItemRepository = $stockItemRepository;
         $this->resourceConnection   = $resourceConnection;
-        $this->_productRepository   = $productRepository;
+        $this->productRepository   = $productRepository;
         $this->limit                = $this->helper->getRPRLimit();
     }
 
@@ -183,7 +183,7 @@ class ProductsMassData
      */
     public function getMassProInfo($product, $storeId)
     {
-        $baseUrl = $this->_storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
+        $baseUrl = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
         return [
             'product_id'        => $product->getId(),
             'name'              => $product->getName(),
@@ -206,7 +206,7 @@ class ProductsMassData
     public function getStockQuantity($productId)
     {
         try {
-            $stockItem = $this->_stockItemRepository->get($productId);
+            $stockItem = $this->stockItemRepository->get($productId);
             $qty = $stockItem->getQty();
         } catch (\Exception $exception) {
             $qty = 0;
@@ -262,6 +262,6 @@ class ProductsMassData
      */
     public function getProductById($productEntity)
     {
-        return $this->_productRepository->getById($productEntity['entity_id']);
+        return $this->productRepository->getById($productEntity['entity_id']);
     }
 }
